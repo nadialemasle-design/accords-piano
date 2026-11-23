@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accords au piano – révisions par niveau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5efe5; --card:#fffaf2; --ink:#1f1c19; --muted:#6f665c; --line:#e2d6c4;
+  --accent:#2f5d50; --accent-soft:#d3e5dc; --ok:#2e8b57; --ok-soft:#cdebd9;
+  --bad:#b8492a; --bad-soft:#f5d6cb; --miss:#d98b1f; --miss-soft:#fbe5c2;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+#app{max-width:640px;margin:0 auto;padding:12px 16px 40px;min-height:100vh}
+header{display:flex;align-items:center;gap:10px;padding:6px 0 14px}
+header h1{font-family:Fraunces,Georgia,serif;font-weight:700;font-size:22px;flex:1;letter-spacing:-.01em}
+#back{border:1px solid var(--line);background:var(--card);width:38px;height:38px;border-radius:12px;font-size:22px;line-height:1;cursor:pointer;color:var(--ink)}
+#score{font-size:13px;font-weight:600;color:var(--muted);text-align:right;line-height:1.3}
+#score b{color:var(--accent)}
+[hidden]{display:none!important}
+
+/* Accueil */
+.intro{color:var(--muted);font-size:15px;line-height:1.5;margin-bottom:16px}
+.settings{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 14px;margin-bottom:18px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;font-size:14px}
+.switch+.switch{border-top:1px solid var(--line)}
+.switch input{appearance:none;width:44px;height:26px;border-radius:20px;background:#d8cdbc;position:relative;cursor:pointer;transition:.2s;flex-shrink:0}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{left:21px}
+.levels{display:grid;gap:10px}
+.level{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%;transition:transform .1s}
+.level:active{transform:scale(.985)}
+.badge{width:48px;height:48px;border-radius:14px;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:Fraunces,serif;font-weight:700;font-size:17px;flex-shrink:0}
+.level.mix .badge{background:#8a5a2b}
+.level .txt{flex:1;min-width:0}
+.level .t{font-weight:600;font-size:15px}
+.level .s{font-size:13px;color:var(--muted);margin-top:2px}
+.level .p{font-size:12px;color:var(--accent);margin-top:6px;font-weight:600}
+.bar{height:4px;background:var(--line);border-radius:4px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.reset{margin-top:22px;background:none;border:none;color:var(--muted);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
+
+/* Entraînement */
+.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:#e9dfcf;border-radius:14px;padding:4px;gap:4px;margin-bottom:14px}
+.tabs button{border:none;background:none;padding:9px 2px;border-radius:10px;font:inherit;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer}
+.tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.prompt{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;text-align:center}
+.kicker{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.question{font-family:Fraunces,Georgia,serif;font-size:28px;font-weight:700;margin-top:6px;line-height:1.15}
+.question.sm{font-size:20px}
+.question small{display:block;font-family:Inter,sans-serif;font-size:15px;font-weight:500;color:var(--accent);margin-top:4px}
+.lesson{text-align:left;font-size:14.5px;line-height:1.55;margin-top:10px}
+.lesson p{margin-bottom:8px}
+.lesson b{color:var(--accent)}
+.lesson .rep{background:var(--accent-soft);border-radius:10px;padding:8px 10px;font-size:13.5px}
+.lesson table{width:100%;border-collapse:collapse;font-size:13.5px;margin:4px 0 8px}
+.lesson td{padding:5px 4px;border-bottom:1px solid var(--line)}
+.lesson td:first-child{font-weight:600}
+.exlabel{grid-column:1/-1;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-top:2px}
+.opts .btn.cur{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.hint{font-size:13px;color:var(--muted);margin-top:8px}
+.listen{display:flex;gap:8px;justify-content:center;margin-top:12px}
+
+.kb-wrap{background:#2a2622;border-radius:14px;padding:8px 6px 6px;margin-bottom:14px;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.kb{position:relative;height:160px;display:flex;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.w{flex:1;background:#fffdf8;border:1px solid #bdb3a5;border-radius:0 0 6px 6px;margin:0 1px;position:relative;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:10px;font-weight:600;color:#9a9083;transition:background .12s}
+.b{position:absolute;top:0;height:60%;background:#1e1b18;border-radius:0 0 5px 5px;z-index:2;cursor:pointer;border:1px solid #000;transition:background .12s}
+.w.sel{background:var(--accent-soft);color:var(--accent)} .b.sel{background:var(--accent)}
+.w.ok{background:var(--ok-soft);color:var(--ok)} .b.ok{background:var(--ok)}
+.w.bad{background:var(--bad-soft);color:var(--bad)} .b.bad{background:var(--bad)}
+.w.miss{background:var(--miss-soft);color:#a0620c;box-shadow:inset 0 0 0 2px var(--miss)} .b.miss{background:var(--miss)}
+.w.press{background:#efe6d6} .b.press{background:#4a433b}
+.w .dot,.b .dot{position:absolute;left:50%;transform:translateX(-50%);width:9px;height:9px;border-radius:50%;background:currentColor}
+.w .dot{bottom:24px} .b .dot{bottom:10px;background:#fff}
+
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:600;font-size:14px;padding:11px 14px;border-radius:12px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.ghost{background:transparent}
+.actions{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px;margin-bottom:14px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.opts .btn{padding:13px 10px;font-size:14.5px;line-height:1.25}
+.opts .btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.opts .btn.bad{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.opts .btn:disabled{cursor:default}
+.opts .btn.dim{opacity:.55}
+
+.fb{border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:14px;line-height:1.5}
+.fb.good{background:var(--ok-soft)} .fb.wrong{background:var(--bad-soft)} .fb.info{background:var(--miss-soft)}
+.fb .verdict{font-weight:700;font-size:15px;margin-bottom:6px}
+.ex-title{font-family:Fraunces,serif;font-weight:700;font-size:18px}
+.ex-notes{font-weight:600;color:var(--accent);margin:2px 0 6px}
+.fb ul{list-style:none;margin:4px 0}
+.fb li{padding:2px 0}
+.tip{margin-top:6px;font-size:13px;color:#4a443d}
+.next{width:100%;padding:14px;font-size:15px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:-6px 0 12px;justify-content:center}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+
+.level.memo{border-color:var(--accent);background:linear-gradient(135deg,#fffaf2,#e3efe8)}
+.level.memo .badge{background:#1f1c19}
+.segs{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.seg{display:flex;background:#e9dfcf;border-radius:12px;padding:3px;gap:3px;flex:1;min-width:150px}
+.seg button{flex:1;border:none;background:none;padding:7px 4px;border-radius:9px;font:inherit;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.mastery{font-size:13px;color:var(--muted);margin:2px 0 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mastery b{color:var(--accent)}
+.pips{display:flex;gap:3px;flex-wrap:wrap}
+.pips i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.pips i.l1{background:#c9dcd3}.pips i.l2{background:#8fbaa8}.pips i.l3{background:var(--accent)}
+.mcard{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px 18px;text-align:center;margin-bottom:14px;min-height:220px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.05)}
+.mcard .name{font-family:Fraunces,Georgia,serif;font-size:36px;font-weight:700}
+.mcard .ask{color:var(--muted);font-size:14px;margin-top:8px}
+.triad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}
+.triad div{background:var(--bg);border-radius:14px;padding:10px 4px}
+.triad .n{font-family:Fraunces,serif;font-size:26px;font-weight:700;color:var(--accent)}
+.triad .r{font-size:11.5px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.triad .d{font-size:11.5px;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.slot{background:var(--bg);border:2px solid transparent;border-radius:14px;padding:10px 4px;cursor:pointer}
+.slot .n{font-family:Fraunces,serif;font-size:26px;font-weight:700;min-height:34px}
+.slot .r{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.slot.given .n{color:var(--muted)}
+.slot.active{border-color:var(--accent)}
+.slot.ok{background:var(--ok-soft)} .slot.bad{background:var(--bad-soft)}
+.slot .fix{font-size:12px;color:var(--ok);font-weight:700}
+.pad{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:6px}
+.pad button,.acc button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:12px 0;font:inherit;font-weight:600;font-size:14px;cursor:pointer;color:var(--ink)}
+.acc{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:12px}
+.acc button{font-size:18px;padding:8px 0}
+.method{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;font-size:14.5px;line-height:1.55}
+.method h3{font-family:Fraunces,serif;font-size:18px;margin-bottom:6px}
+.method .step{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-family:Inter;margin-right:6px;vertical-align:2px}
+.method p{margin-bottom:8px}
+.method table{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0}
+.method td{padding:6px 4px;border-bottom:1px solid var(--line)}
+.method td:first-child{font-weight:600;width:40%}
+.alpha{display:flex;gap:3px;flex-wrap:wrap;margin:8px 0}
+.alpha span{padding:5px 7px;border-radius:8px;background:var(--bg);font-size:13px;font-weight:600;color:var(--muted)}
+.alpha span.hi{background:var(--accent);color:#fff}
+.method .rep{background:var(--accent-soft);border-radius:10px;padding:8px 10px;font-size:13.5px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button id="back" hidden aria-label="Retour">‹</button>
+    <h1 id="title">Accords au piano</h1>
+    <div id="score"></div>
+  </header>
+
+  <main id="home">
+    <p class="intro">Révise la composition des accords niveau par niveau : construis-les sur le clavier, reconnais-les à la vue, puis à l'oreille.</p>
+    <div class="settings">
+      <label class="switch">Afficher le nom des touches blanches<input type="checkbox" id="optNames"></label>
+      <label class="switch">Fondamentales sans altération (Do, Ré, Mi…)<input type="checkbox" id="optNat"></label>
+    </div>
+    <div class="levels" id="memoEntry" style="margin-bottom:10px"></div>
+    <div class="levels" id="levels"></div>
+    <button class="reset" id="reset">Réinitialiser ma progression</button>
+  </main>
+
+  <main id="memo" hidden>
+    <div class="tabs" id="mtabs">
+      <button data-t="method">Méthode</button>
+      <button data-t="cards">Cartes</button>
+      <button data-t="quiz">Quiz</button>
+    </div>
+    <div class="segs">
+      <div class="seg" id="segType"><button data-v="maj">Majeurs</button><button data-v="min">Mineurs</button><button data-v="both">Les 2</button></div>
+      <div class="seg" id="segRoots"><button data-v="nat">7 notes</button><button data-v="all">12 notes</button></div>
+    </div>
+    <div class="mastery" id="mastery"></div>
+    <div id="mbody"></div>
+  </main>
+
+  <main id="play" hidden>
+    <div class="tabs" id="tabs">
+      <button data-m="lesson" id="tabLesson">Leçon</button>
+      <button data-m="build">Construire</button>
+      <button data-m="recog">Reconnaître</button>
+      <button data-m="ear">Écouter</button>
+    </div>
+    <div class="prompt">
+      <div class="kicker" id="kicker"></div>
+      <div class="question" id="question"></div>
+      <div class="hint" id="hint"></div>
+      <div class="lesson" id="lessonText" hidden></div>
+      <div class="listen" id="listen">
+        <button class="btn" id="playChord">▶ Plaqué</button>
+        <button class="btn" id="playArp">♪ Arpège</button>
+      </div>
+    </div>
+    <div class="kb-wrap"><div class="kb" id="kb"></div></div>
+    <div class="legend" id="legend" hidden>
+      <span style="--c:var(--ok)">juste</span>
+      <span style="--c:var(--bad)">en trop</span>
+      <span style="--c:var(--miss)">manquante</span>
+    </div>
+    <div class="actions" id="actions">
+      <button class="btn ghost" id="clear">Effacer</button>
+      <button class="btn" id="hear">▶ Écouter</button>
+      <button class="btn primary" id="check">Valider</button>
+    </div>
+    <div class="opts" id="opts"></div>
+    <div id="fb"></div>
+    <button class="btn primary next" id="next" hidden>Accord suivant →</button>
+  </main>
+</div>
+
+<script>
+/* ---------- Théorie ---------- */
+const LETTERS=['Do','Ré','Mi','Fa','Sol','La','Si'];
+const LETTER_PC=[0,2,4,5,7,9,11];
+// [indice de lettre, altération]
+const ROOTS=[[0,0],[1,-1],[1,0],[2,-1],[2,0],[3,0],[3,1],[4,0],[5,-1],[5,0],[6,-1],[6,0]];
+const ACC={'-2':'𝄫','-1':'♭','0':'','1':'♯','2':'𝄪'};
+const rootPc=r=>(LETTER_PC[r[0]]+r[1]+12)%12;
+const rootName=i=>LETTERS[ROOTS[i][0]]+ACC[ROOTS[i][1]];
+function spell(r,semis,steps){
+  const L=(r[0]+steps)%7, target=(rootPc(r)+semis)%12;
+  let a=target-LETTER_PC[L]; a=((a+18)%12)-6;
+  return LETTERS[L]+ACC[a];
+}
+const ROLE={0:'fondamentale',2:'seconde majeure',3:'tierce mineure',4:'tierce majeure',5:'quarte juste',6:'quinte diminuée',7:'quinte juste',8:'quinte augmentée',9:'septième diminuée',10:'septième mineure',11:'septième majeure',13:'neuvième mineure',14:'neuvième majeure',15:'neuvième augmentée',17:'onzième juste',21:'treizième majeure'};
+const T={
+  maj:{label:'majeur',long:'Majeur',iv:[0,4,7],st:[0,2,4],tip:'Tierce majeure (4) puis tierce mineure (3).'},
+  min:{label:'mineur',long:'Mineur',iv:[0,3,7],st:[0,2,4],tip:'Tierce mineure (3) puis tierce majeure (4).'},
+  dim:{label:'diminué',long:'Diminué',iv:[0,3,6],st:[0,2,4],tip:'Deux tierces mineures empilées (3 + 3).'},
+  aug:{label:'augmenté',long:'Augmenté',iv:[0,4,8],st:[0,2,4],tip:'Deux tierces majeures empilées (4 + 4). Accord symétrique.'},
+  sus2:{label:'sus2',long:'Sus2',iv:[0,2,7],st:[0,1,4],tip:'La tierce est remplacée par la seconde.'},
+  sus4:{label:'sus4',long:'Sus4',iv:[0,5,7],st:[0,3,4],tip:'La tierce est remplacée par la quarte.'},
+  dom7:{label:'7',long:'7 (dominante)',iv:[0,4,7,10],st:[0,2,4,6],tip:'Accord majeur + septième mineure.'},
+  maj7:{label:'maj7',long:'maj7',iv:[0,4,7,11],st:[0,2,4,6],tip:'Accord majeur + septième majeure (un demi-ton sous l’octave).'},
+  m7:{label:'m7',long:'m7',iv:[0,3,7,10],st:[0,2,4,6],tip:'Accord mineur + septième mineure.'},
+  m7b5:{label:'m7♭5',long:'m7♭5 (demi-diminué)',iv:[0,3,6,10],st:[0,2,4,6],tip:'Accord diminué + septième mineure.'},
+  dim7:{label:'dim7',long:'dim7',iv:[0,3,6,9],st:[0,2,4,6],tip:'Trois tierces mineures empilées. Accord symétrique.'},
+  dom9:{label:'9',long:'9',iv:[0,4,7,10,14],st:[0,2,4,6,1],tip:'Accord de 7 + neuvième majeure.'},
+  maj9:{label:'maj9',long:'maj9',iv:[0,4,7,11,14],st:[0,2,4,6,1],tip:'Accord maj7 + neuvième majeure.'},
+  m9:{label:'m9',long:'m9',iv:[0,3,7,10,14],st:[0,2,4,6,1],tip:'Accord m7 + neuvième majeure.'},
+  dom7b9:{label:'7♭9',long:'7♭9',iv:[0,4,7,10,13],st:[0,2,4,6,1],tip:'Accord de 7 + neuvième mineure (un demi-ton au-dessus de la fondamentale).'},
+  dom7s9:{label:'7♯9',long:'7♯9',iv:[0,4,7,10,15],st:[0,2,4,6,1],tip:'Accord de 7 + neuvième augmentée : tierces majeure et « mineure » ensemble.'},
+  aug7:{label:'7♯5',long:'7♯5',iv:[0,4,8,10],st:[0,2,4,6],tip:'Accord augmenté + septième mineure.'},
+  m11:{label:'m11',long:'m11',iv:[0,3,7,10,14,17],st:[0,2,4,6,1,3],tip:'Accord m9 + onzième juste.'},
+  dom13:{label:'13',long:'13',iv:[0,4,7,10,14,21],st:[0,2,4,6,1,5],tip:'Accord de 9 + treizième (la 11e est généralement omise).'}
+};
+const INV=['position fondamentale','1er renversement','2e renversement','3e renversement'];
+const ALL=Object.keys(T);
+const LEVELS=[
+  {id:'1.1',badge:'1.1',title:'Niveau 1.1',sub:'Accords majeurs et mineurs',types:['maj','min'],inv:false},
+  {id:'1.2',badge:'1.2',title:'Niveau 1.2',sub:'Renversements des accords majeurs et mineurs',types:['maj','min'],inv:true,maxInv:2},
+  {id:'2',badge:'2',title:'Niveau 2',sub:'Diminués, augmentés, sus2, sus4',types:['dim','aug','sus2','sus4'],inv:false},
+  {id:'3',badge:'3.1',title:'Niveau 3.1',sub:'Septièmes : 7, maj7, m7, m7♭5, dim7',types:['dom7','maj7','m7','m7b5','dim7'],inv:false},
+  {id:'3.2',badge:'3.2',title:'Niveau 3.2',sub:'Renversements des septièmes : 7, maj7, m7, m7♭5',types:['dom7','maj7','m7','m7b5'],inv:true,maxInv:3},
+  {id:'4',badge:'4',title:'Niveau 4',sub:'9e, 11e, 13e et altérations',types:['dom9','maj9','m9','dom7b9','dom7s9','aug7','m11','dom13'],inv:false},
+  {id:'mix',badge:'∞',title:'Tout mélanger',sub:'Révision de tous les types d’accords',types:ALL,inv:false,mix:true}
+];
+const MODES={build:'Construire',recog:'Reconnaître',ear:'Écouter'};
+const LESSONS={
+'1.1':`<p>Un accord de 3 notes (une <b>triade</b>) se construit en empilant <b>deux tierces</b> au-dessus de la <b>fondamentale</b>. Pour mesurer, on compte les <b>demi-tons</b> : chaque touche voisine, noires comprises.</p>
+<table><tr><td>Majeur</td><td>tierce majeure (4) + tierce mineure (3)</td></tr><tr><td>Mineur</td><td>tierce mineure (3) + tierce majeure (4)</td></tr></table>
+<p>Dans les deux cas, la fondamentale et la quinte sont à <b>7 demi-tons</b> l’une de l’autre (quinte juste). Seule la <b>tierce</b> change : on la descend d’un demi-ton pour passer de majeur à mineur.</p>
+<p class="rep">Repère : Do majeur = Do – Mi – Sol, Do mineur = Do – Mi♭ – Sol.</p>`,
+'1.2':`<p><b>Renverser</b> un accord, c’est garder les mêmes notes mais changer celle qui est <b>à la basse</b> (la plus grave). La note qui était en bas monte d’une octave.</p>
+<table><tr><td>Fondamental</td><td>fondamentale à la basse : Do – Mi – Sol</td></tr><tr><td>1er renv.</td><td>tierce à la basse : Mi – Sol – Do</td></tr><tr><td>2e renv.</td><td>quinte à la basse : Sol – Do – Mi</td></tr></table>
+<p class="rep">Repère visuel : en position fondamentale, les deux écarts sont des tierces. Au 1er renversement, le grand écart (une quarte) est <b>en haut</b> ; au 2e renversement, il est <b>en bas</b>. La note juste au-dessus de la quarte est toujours la fondamentale.</p>`,
+'2':`<p>On garde l’idée d’empiler des tierces, mais on change leur combinaison, ou on remplace la tierce.</p>
+<table><tr><td>Diminué</td><td>3 + 3 → quinte diminuée (6)</td></tr><tr><td>Augmenté</td><td>4 + 4 → quinte augmentée (8)</td></tr><tr><td>Sus2</td><td>seconde (2) + quinte juste (7), pas de tierce</td></tr><tr><td>Sus4</td><td>quarte (5) + quinte juste (7), pas de tierce</td></tr></table>
+<p>Les accords sus ne sont ni majeurs ni mineurs : ils sonnent « en suspens », comme s’ils attendaient de se résoudre.</p>
+<p class="rep">Attention : l’accord augmenté est symétrique. Do aug, Mi aug et Sol♯ aug utilisent les mêmes touches.</p>`,
+'3':`<p>Un accord de septième = une <b>triade + une quatrième note</b>, une tierce plus haut : la <b>septième</b>.</p>
+<p>Septième <b>mineure</b> = 10 demi-tons (un ton sous l’octave). Septième <b>majeure</b> = 11 demi-tons (un demi-ton sous l’octave).</p>
+<table><tr><td>7</td><td>majeur + 7e mineure</td></tr><tr><td>maj7</td><td>majeur + 7e majeure</td></tr><tr><td>m7</td><td>mineur + 7e mineure</td></tr><tr><td>m7♭5</td><td>diminué + 7e mineure</td></tr><tr><td>dim7</td><td>diminué + 7e diminuée (9)</td></tr></table>
+<p class="rep">Repère : Do7 = Do – Mi – Sol – Si♭ ; Do maj7 = Do – Mi – Sol – Si.</p>`,
+'3.2':`<p>Un accord de septième a 4 notes, donc <b>4 positions</b> : on peut mettre chacune à la basse.</p>
+<table><tr><td>Fondamental</td><td>fondamentale à la basse : Do – Mi – Sol – Si♭</td></tr><tr><td>1er renv.</td><td>tierce à la basse : Mi – Sol – Si♭ – Do</td></tr><tr><td>2e renv.</td><td>quinte à la basse : Sol – Si♭ – Do – Mi</td></tr><tr><td>3e renv.</td><td>septième à la basse : Si♭ – Do – Mi – Sol</td></tr></table>
+<p class="rep">Repère : dans un renversement, cherche les <b>deux notes voisines</b> (un écart de seconde, entre la septième et la fondamentale). La note du haut de cette paire est la <b>fondamentale</b>.</p>`,
+'4':`<p>Les <b>extensions</b> continuent d’empiler des tierces au-delà de l’octave, sur un accord de septième.</p>
+<table><tr><td>9e</td><td>seconde + octave (14)</td></tr><tr><td>11e</td><td>quarte + octave (17)</td></tr><tr><td>13e</td><td>sixte + octave (21)</td></tr></table>
+<p>Les <b>altérations</b> modifient une note d’un demi-ton : ♭9 (13), ♯9 (15), ♯5 (8).</p>
+<p>En pratique, les pianistes omettent souvent la quinte, et la 11e dans l’accord de 13. Ici, l’appli demande toutes les notes pour bien les mémoriser, dans n’importe quelle octave.</p>
+<p class="rep">Repère : Do9 = Do – Mi – Sol – Si♭ – Ré.</p>`
+};
+
+/* ---------- Stockage ---------- */
+const KEY='accords-piano-v1';
+let DATA; try{DATA=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){DATA={}}
+DATA.stats=DATA.stats||{}; DATA.opts=Object.assign({names:true,naturals:false},DATA.opts||{});
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(DATA))}catch(e){}};
+
+/* ---------- Audio ---------- */
+let ctx=null;
+function ac(){
+  if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}
+  if(ctx.state==='suspended')ctx.resume();
+  return ctx;
+}
+function tone(n,t0,dur,vol){
+  const c=ac(); if(!c)return;
+  const f=130.81*Math.pow(2,n/12);
+  const filt=c.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=Math.min(6000,f*7);
+  const g=c.createGain();
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(vol,t0+0.008);
+  g.gain.exponentialRampToValueAtTime(vol*0.35,t0+0.3);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  [['triangle',1,1],['sine',2,0.35],['sine',3,0.1]].forEach(([type,m,a])=>{
+    const o=c.createOscillator(); o.type=type; o.frequency.value=f*m;
+    const og=c.createGain(); og.gain.value=a;
+    o.connect(og); og.connect(filt); o.start(t0); o.stop(t0+dur+0.05);
+  });
+  filt.connect(g); g.connect(c.destination);
+}
+function playNotes(notes,arp){
+  const c=ac(); if(!c||!notes.length)return;
+  const t=c.currentTime+0.03, v=0.34/Math.sqrt(notes.length);
+  [...notes].sort((a,b)=>a-b).forEach((n,i)=>tone(n,t+(arp?i*0.3:i*0.012),arp?1.8:2.6,v));
+}
+
+/* ---------- Utilitaires ---------- */
+const $=s=>document.querySelector(s);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const rotate=(a,k)=>a.slice(k).concat(a.slice(0,k));
+
+/* ---------- État ---------- */
+const S={level:null,mode:'build',q:null,sel:new Set(),answered:false,streak:0,ok:0,total:0,lastKey:''};
+const LV=()=>S.level;
+
+function buildChord(root,type,inv){
+  const ty=T[type], rp=rootPc(ROOTS[root]);
+  let notes=ty.iv.map(i=>rp+i);
+  for(let k=0;k<inv;k++)notes[k]+=12;
+  notes.sort((a,b)=>a-b);
+  let guard=0;
+  while(notes[notes.length-1]>23&&guard++<10){
+    if(notes[0]>=12)notes=notes.map(n=>n-12);
+    else{notes[notes.length-1]-=12;notes=[...new Set(notes)].sort((a,b)=>a-b)}
+  }
+  return {root,type,inv,notes,pcs:new Set(notes.map(n=>n%12)),bass:(rp+ty.iv[inv])%12,key:type+'|'+root+'|'+inv};
+}
+function rootsAllowed(){return ROOTS.map((r,i)=>(!DATA.opts.naturals||r[1]===0)?i:-1).filter(i=>i>=0)}
+function randomChord(){
+  const lv=LV(); let q,g=0;
+  do{q=buildChord(pick(rootsAllowed()),pick(lv.types),lv.inv?pick(lv.maxInv===3?[0,1,2,3]:[0,1,1,2,2]):0)}while(q.key===S.lastKey&&g++<20);
+  S.lastKey=q.key; return q;
+}
+function sameSound(a,b){
+  if(a.pcs.size!==b.pcs.size)return false;
+  for(const p of a.pcs)if(!b.pcs.has(p))return false;
+  return LV().inv?a.bass===b.bass:true;
+}
+function label(q,withInv=true){
+  let s=rootName(q.root)+' '+T[q.type].label;
+  if(withInv&&LV().inv)s+=' · '+INV[q.inv];
+  return s;
+}
+function chordTitleHTML(q){
+  return rootName(q.root)+' '+T[q.type].label+(LV().inv?'<small>'+INV[q.inv]+'</small>':'');
+}
+function explain(q){
+  const ty=T[q.type], r=ROOTS[q.root];
+  const names=ty.iv.map((s,i)=>spell(r,s,ty.st[i]));
+  const order=LV().inv?rotate(names,q.inv):names;
+  let h=`<div class="ex-title">${rootName(q.root)} ${ty.label}${LV().inv?' · '+INV[q.inv]:''}</div>`;
+  h+=`<div class="ex-notes">${order.join(' – ')}</div><ul>`;
+  h+=ty.iv.map((s,i)=>i===0?`<li><b>${names[0]}</b> : fondamentale</li>`:`<li><b>${names[i]}</b> : ${ROLE[s]} (${s} demi-tons)</li>`).join('');
+  h+='</ul>';
+  if(ty.tip)h+=`<p class="tip">${ty.tip}</p>`;
+  if(LV().inv){
+    const rn=['la fondamentale','la tierce','la quinte','la septième'];
+    h+=`<p class="tip">Basse : <b>${names[q.inv]}</b> (${rn[q.inv]}) → ${INV[q.inv]}.</p>`;
+  }
+  return h;
+}
+
+/* ---------- Clavier ---------- */
+const keyEls=[];
+function buildKeyboard(){
+  const kb=$('#kb'); kb.innerHTML=''; keyEls.length=0;
+  const whites=14, wPct=100/whites; let wi=0;
+  for(let n=0;n<24;n++){
+    const pc=n%12, li=LETTER_PC.indexOf(pc);
+    const el=document.createElement('div'); el.dataset.n=n;
+    if(li>=0){
+      el.className='w';
+      el.textContent=(DATA.opts.names||li===0)?LETTERS[li]:'';
+      kb.appendChild(el); wi++;
+    }else{
+      el.className='b';
+      el.style.left=`calc(${wi*wPct}% - ${wPct*0.32}%)`;
+      el.style.width=`${wPct*0.64}%`;
+      kb.appendChild(el);
+    }
+    el.addEventListener('click',()=>onKey(n,el));
+    keyEls[n]=el;
+  }
+}
+function clearKeys(){keyEls.forEach(el=>{el.classList.remove('sel','ok','bad','miss');const d=el.querySelector('.dot');if(d)d.remove()})}
+function mark(n,cls){const el=keyEls[n];el.classList.add(cls);if(!el.querySelector('.dot')){const d=document.createElement('span');d.className='dot';el.appendChild(d)}}
+function onKey(n,el){
+  tone(n,ac()?ac().currentTime+0.01:0,1.6,0.3);
+  el.classList.add('press'); setTimeout(()=>el.classList.remove('press'),140);
+  if(S.mode==='build'&&!S.answered){
+    if(S.sel.has(n)){S.sel.delete(n);el.classList.remove('sel');const d=el.querySelector('.dot');if(d)d.remove()}
+    else{S.sel.add(n);mark(n,'sel')}
+    $('#fb').innerHTML='';
+  }
+}
+
+/* ---------- Écrans ---------- */
+function renderHome(){
+  S.level=null;
+  $('#home').hidden=false; $('#play').hidden=true; $('#memo').hidden=true; $('#back').hidden=true;
+  {const d=memoDeck({type:'both',roots:'all'}), n=d.filter(c=>box(c)>=3).length;
+   $('#memoEntry').innerHTML=`<button class="level memo" id="openMemo"><div class="badge">♪</div><div class="txt"><div class="t">Par cœur : fondamentale, tierce, quinte</div><div class="s">Mémoriser les accords majeurs et mineurs, sans clavier</div><div class="p">${n?`Mémorisés ${n}/${d.length}`:'Commence ici'}</div></div></button>`;
+   $('#openMemo').onclick=openMemo;}
+  $('#title').textContent='Accords au piano'; $('#score').innerHTML='';
+  $('#optNames').checked=DATA.opts.names; $('#optNat').checked=DATA.opts.naturals;
+  $('#levels').innerHTML=LEVELS.map(lv=>{
+    let ok=0,tot=0; Object.keys(MODES).forEach(m=>{const s=DATA.stats[lv.id+'|'+m];if(s){ok+=s.ok;tot+=s.total}});
+    const pct=tot?Math.round(ok/tot*100):0;
+    const prog=tot?`Réussite ${pct} % · ${tot} question${tot>1?'s':''}`:'Pas encore commencé';
+    return `<button class="level${lv.mix?' mix':''}" data-id="${lv.id}"><div class="badge">${lv.badge}</div><div class="txt"><div class="t">${lv.title}</div><div class="s">${lv.sub}</div><div class="p">${prog}</div>${tot?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}</div></button>`;
+  }).join('');
+  document.querySelectorAll('#levels .level').forEach(b=>b.onclick=()=>openLevel(b.dataset.id));
+}
+function openLevel(id){
+  S.level=LEVELS.find(l=>l.id===id); S.streak=0; S.ok=0; S.total=0; S.lastKey='';
+  $('#home').hidden=true; $('#play').hidden=false; $('#back').hidden=false;
+  $('#title').textContent=S.level.title;
+  const started=Object.keys(MODES).some(m=>DATA.stats[id+'|'+m]);
+  $('#tabLesson').hidden=!!S.level.mix;
+  let m=S.mode; if(!started&&!S.level.mix)m='lesson'; if(S.level.mix&&m==='lesson')m='build';
+  S.exRoot=0;
+  buildKeyboard(); setMode(m); window.scrollTo(0,0);
+}
+function setMode(m){
+  S.mode=m;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  newRound();
+}
+function updateScore(){
+  const s=DATA.stats[LV().id+'|'+S.mode]||{best:0};
+  $('#score').innerHTML=`<b>${S.ok}/${S.total}</b> cette session<br>série ${S.streak} · record ${s.best||0}`;
+}
+function record(good){
+  const k=LV().id+'|'+S.mode, s=DATA.stats[k]||(DATA.stats[k]={ok:0,total:0,best:0});
+  s.total++; S.total++;
+  if(good){s.ok++;S.ok++;S.streak++;if(S.streak>s.best)s.best=S.streak}else S.streak=0;
+  save(); updateScore();
+}
+
+function renderLesson(){
+  const lv=LV();
+  $('#actions').hidden=true; $('#listen').hidden=false; $('#next').hidden=true; $('#legend').hidden=true;
+  $('#kicker').textContent='Leçon';
+  $('#question').innerHTML=lv.sub; $('#question').classList.add('sm');
+  $('#hint').textContent='';
+  $('#lessonText').innerHTML=LESSONS[lv.id]||''; $('#lessonText').hidden=false;
+  const box=$('#opts'); box.innerHTML='<div class="exlabel">Exemples sur '+rootName(S.exRoot)+' : touche pour voir et écouter</div>';
+  const ex=[];
+  lv.types.forEach(t=>{ if(lv.inv){for(let i=0;i<=lv.maxInv;i++)ex.push(buildChord(S.exRoot,t,i))} else ex.push(buildChord(S.exRoot,t,0)) });
+  const show=(q,b)=>{
+    S.q=q; clearKeys(); q.notes.forEach(n=>mark(n,'ok')); playNotes(q.notes,true);
+    box.querySelectorAll('.btn').forEach(x=>x.classList.remove('cur')); b.classList.add('cur');
+    $('#fb').innerHTML=`<div class="fb good">${explain(q)}</div>`;
+  };
+  ex.forEach(q=>{const b=document.createElement('button');b.className='btn';b.textContent=label(q);b.onclick=()=>show(q,b);box.appendChild(b)});
+  const other=document.createElement('button'); other.className='btn ghost'; other.textContent='↻ Autre fondamentale';
+  other.onclick=()=>{const rs=rootsAllowed().filter(r=>r!==S.exRoot); S.exRoot=pick(rs.length?rs:[0]); renderLesson()};
+  box.appendChild(other);
+  S.q=ex[0]; clearKeys(); ex[0].notes.forEach(n=>mark(n,'ok')); $('#fb').innerHTML='';
+  box.querySelector('.btn').classList.add('cur');
+  $('#score').innerHTML='';
+}
+function newRound(){
+  $('#lessonText').hidden=true; $('#question').classList.remove('sm');
+  if(S.mode==='lesson'){renderLesson();return}
+  S.q=randomChord(); S.sel=new Set(); S.answered=false;
+  clearKeys(); $('#fb').innerHTML=''; $('#next').hidden=true; $('#legend').hidden=true;
+  const lv=LV(), q=S.q;
+  $('#actions').hidden=S.mode!=='build';
+  $('#listen').hidden=S.mode==='build';
+  $('#opts').innerHTML='';
+  if(S.mode==='build'){
+    $('#kicker').textContent='Construis l’accord';
+    $('#question').innerHTML=chordTitleHTML(q);
+    $('#hint').textContent=lv.inv?'Attention à la basse : la note la plus grave compte.':'Toutes les notes, dans l’ordre ou le renversement de ton choix.';
+  }else if(S.mode==='recog'){
+    $('#kicker').textContent='Quel est cet accord ?';
+    $('#question').innerHTML='';
+    $('#hint').textContent='Observe les touches marquées.';
+    q.notes.forEach(n=>mark(n,'sel'));
+    renderOptions(recogOptions());
+    playNotes(q.notes,false);
+  }else{
+    $('#kicker').textContent='Écoute et identifie';
+    $('#question').innerHTML='';
+    $('#hint').textContent=lv.inv?'Quelle est la position de l’accord ?':'Quelle est la nature de l’accord ?';
+    renderOptions(earOptions());
+    playNotes(q.notes,false);
+  }
+  updateScore();
+}
+function recogOptions(){
+  const q=S.q, lv=LV(), opts=[{text:label(q),correct:true}], seen=new Set([label(q)]);
+  let g=0;
+  while(opts.length<4&&g++<300){
+    const root=Math.random()<0.5?q.root:pick(rootsAllowed());
+    const type=Math.random()<0.6||lv.types.length===1?pick(lv.types):q.type;
+    const c=buildChord(root,type,lv.inv?Math.floor(Math.random()*(lv.maxInv+1)):0);
+    const l=label(c);
+    if(seen.has(l)||sameSound(c,q))continue;
+    seen.add(l); opts.push({text:l,correct:false});
+  }
+  return shuffle(opts);
+}
+function earOptions(){
+  const q=S.q, lv=LV();
+  if(lv.inv)return INV.slice(0,lv.maxInv+1).map((t,i)=>({text:t.charAt(0).toUpperCase()+t.slice(1),correct:i===q.inv}));
+  let types=lv.types;
+  if(types.length>6)types=shuffle([q.type,...shuffle(types.filter(t=>t!==q.type)).slice(0,3)]);
+  return types.map(t=>({text:T[t].long,correct:t===q.type}));
+}
+function renderOptions(opts){
+  const box=$('#opts'); box.innerHTML='';
+  opts.forEach(o=>{
+    const b=document.createElement('button'); b.className='btn'; b.textContent=o.text;
+    b.onclick=()=>answerOption(b,o,opts); o.el=b; box.appendChild(b);
+  });
+}
+function answerOption(b,o,opts){
+  if(S.answered)return; S.answered=true;
+  opts.forEach(x=>{x.el.disabled=true;if(x.correct)x.el.classList.add('ok');else if(x!==o)x.el.classList.add('dim')});
+  if(!o.correct)b.classList.add('bad');
+  clearKeys(); S.q.notes.forEach(n=>mark(n,'ok'));
+  if(S.mode==='ear')$('#question').innerHTML=chordTitleHTML(S.q);
+  showFeedback(o.correct,o.correct?'Bravo !':'Pas tout à fait.');
+  record(o.correct);
+}
+function checkBuild(){
+  if(S.answered)return;
+  if(!S.sel.size){$('#fb').innerHTML='<div class="fb info">Touche les notes de l’accord sur le clavier, puis valide.</div>';return}
+  const q=S.q, sel=[...S.sel].sort((a,b)=>a-b), selPcs=new Set(sel.map(n=>n%12));
+  let pcsOk=selPcs.size===q.pcs.size; for(const p of q.pcs)if(!selPcs.has(p))pcsOk=false;
+  const extra=sel.filter(n=>!q.pcs.has(n%12));
+  const bassOk=!LV().inv||(sel[0]%12===q.bass);
+  const good=pcsOk&&extra.length===0&&bassOk;
+  S.answered=true; clearKeys();
+  sel.forEach(n=>mark(n,q.pcs.has(n%12)?'ok':'bad'));
+  const missing=[...q.pcs].filter(p=>!selPcs.has(p));
+  missing.forEach(p=>{const n=q.notes.find(x=>x%12===p);mark(n,'miss')});
+  if(LV().inv&&!bassOk){const lowest=sel[0];keyEls[lowest].classList.remove('ok');mark(lowest,'bad');}
+  $('#legend').hidden=good;
+  let msg=good?'Bravo, c’est juste !':'Pas tout à fait.';
+  if(!good&&pcsOk&&!extra.length&&!bassOk)msg='Bonnes notes, mais pas la bonne basse.';
+  showFeedback(good,msg);
+  record(good);
+}
+function showFeedback(good,msg){
+  $('#fb').innerHTML=`<div class="fb ${good?'good':'wrong'}"><div class="verdict">${msg}</div>${explain(S.q)}</div>`;
+  $('#next').hidden=false;
+  $('#next').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ---------- Par cœur ---------- */
+DATA.memo=DATA.memo||{}; DATA.memoOpts=Object.assign({type:'maj',roots:'nat',tab:'method'},DATA.memoOpts||{});
+const M={card:null,last:'',flipped:false,ans:[null,null],active:1,checked:false};
+const NAT=[[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0]];
+const ALT_MAJ=[[1,-1],[2,-1],[3,1],[5,-1],[6,-1]];   // Ré♭ Mi♭ Fa♯ La♭ Si♭
+const ALT_MIN=[[0,1],[2,-1],[3,1],[4,1],[6,-1]];     // Do♯ Mi♭ Fa♯ Sol♯ Si♭
+const nm=r=>LETTERS[r[0]]+ACC[r[1]];
+function memoDeck(o=DATA.memoOpts){
+  const d=[];
+  const types=o.type==='both'?['maj','min']:[o.type];
+  types.forEach(t=>{
+    let roots=[...NAT]; if(o.roots==='all')roots=roots.concat(t==='maj'?ALT_MAJ:ALT_MIN);
+    roots.forEach(r=>d.push({r,t,key:t+'|'+r[0]+'|'+r[1]}));
+  });
+  return d;
+}
+function triad(c){const ty=T[c.t];return ty.iv.map((s,i)=>spell(c.r,s,ty.st[i]))}
+const cname=c=>nm(c.r)+' '+(c.t==='maj'?'majeur':'mineur');
+const box=c=>DATA.memo[c.key]||0;
+function setBox(c,good){DATA.memo[c.key]=good?Math.min(4,box(c)+1):0;save()}
+function pickCard(){
+  const d=memoDeck(); let tot=0;
+  const w=d.map(c=>{const x=(c.key===M.last&&d.length>1)?0:Math.pow(2,4-box(c));tot+=x;return x});
+  let r=Math.random()*tot; for(let i=0;i<d.length;i++){r-=w[i];if(r<=0){M.last=d[i].key;return d[i]}}
+  return d[0];
+}
+function playTriad(c){const rp=rootPc(c.r);playNotes(T[c.t].iv.map(i=>rp+i),true)}
+function renderMastery(){
+  const d=memoDeck(), n=d.filter(c=>box(c)>=3).length;
+  $('#mastery').innerHTML=`<span>Mémorisés : <b>${n}/${d.length}</b></span><span class="pips">${d.map(c=>{const b=box(c);return `<i class="${b>=3?'l3':b===2?'l2':b===1?'l1':''}"></i>`}).join('')}</span>`;
+}
+function openMemo(){
+  $('#home').hidden=true; $('#play').hidden=true; $('#memo').hidden=false; $('#back').hidden=false;
+  $('#title').textContent='Par cœur'; $('#score').innerHTML='';
+  memoTab(DATA.memoOpts.tab); window.scrollTo(0,0);
+}
+function memoTab(t){
+  DATA.memoOpts.tab=t; save();
+  document.querySelectorAll('#mtabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.querySelectorAll('#segType button').forEach(b=>b.classList.toggle('on',b.dataset.v===DATA.memoOpts.type));
+  document.querySelectorAll('#segRoots button').forEach(b=>b.classList.toggle('on',b.dataset.v===DATA.memoOpts.roots));
+  renderMastery();
+  if(t==='method')renderMethod(); else if(t==='cards')newCard(); else newQuiz();
+}
+function renderMethod(){
+  const alpha=['Do','Ré','Mi','Fa','Sol','La','Si','Do','Ré','Mi'];
+  const sk=NAT.map(r=>`<tr><td>${nm(r)}</td><td>${[0,2,4].map(k=>LETTERS[(r[0]+k)%7]).join(' – ')}</td></tr>`).join('');
+  const rows=memoDeck().map(c=>`<tr><td>${cname(c)}</td><td>${triad(c).join(' – ')}</td></tr>`).join('');
+  $('#mbody').innerHTML=`
+  <div class="method"><h3><span class="step">1</span>Une note sur deux</h3>
+  <p>Les 3 notes d’un accord s’obtiennent en <b>sautant une note</b> dans la gamme : fondamentale, (on saute), tierce, (on saute), quinte.</p>
+  <div class="alpha">${alpha.map((a,i)=>`<span class="${i%2===0&&i<5?'hi':''}">${a}</span>`).join('')}</div>
+  <p>Commence par apprendre ce <b>squelette</b> par cœur, comme une comptine. Les lettres ne changent jamais, que l’accord soit majeur ou mineur.</p>
+  <table>${sk}</table>
+  <p class="rep">Astuce : récite-les à la suite. Chaque accord commence sur la tierce du précédent moins une note : Do-Mi-Sol, Ré-Fa-La, Mi-Sol-Si…</p></div>
+
+  <div class="method"><h3><span class="step">2</span>Ajouter les altérations</h3>
+  <p>Ensuite, il suffit de retenir quelques exceptions.</p>
+  <table>
+  <tr><td>Majeurs sans altération</td><td>Do, Fa, Sol</td></tr>
+  <tr><td>Majeurs avec tierce ♯</td><td>Ré (Fa♯), Mi (Sol♯), La (Do♯)</td></tr>
+  <tr><td>Si majeur</td><td>Si – Ré♯ – Fa♯ (tierce et quinte ♯)</td></tr>
+  <tr><td>Mineurs sans altération</td><td>Ré, Mi, La</td></tr>
+  <tr><td>Mineurs avec tierce ♭</td><td>Do (Mi♭), Fa (La♭), Sol (Si♭)</td></tr>
+  <tr><td>Si mineur</td><td>Si – Ré – Fa♯ (quinte ♯)</td></tr>
+  </table>
+  <p class="rep">Retiens les groupes : <b>Do-Fa-Sol</b> sont « propres » en majeur, <b>Ré-Mi-La</b> sont « propres » en mineur.</p></div>
+
+  <div class="method"><h3><span class="step">3</span>Passer de majeur à mineur</h3>
+  <p>Seule la <b>tierce</b> change : elle descend d’un demi-ton. La fondamentale et la quinte restent identiques.</p>
+  <p class="rep">Ré majeur = Ré – Fa♯ – La → Ré mineur = Ré – <b>Fa</b> – La</p></div>
+
+  <div class="method"><h3><span class="step">4</span>Fondamentale avec ♯ ou ♭ (12 notes)</h3>
+  <p>Pars de l’accord sans altération, puis <b>ajoute la même altération aux 3 notes</b> (un ♯ et un ♭ s’annulent).</p>
+  <p class="rep">Mi majeur = Mi – Sol♯ – Si → Mi♭ majeur = Mi♭ – <b>Sol</b> – Si♭<br>Fa majeur = Fa – La – Do → Fa♯ majeur = Fa♯ – La♯ – Do♯</p></div>
+
+  <div class="method"><h3>Tableau de la sélection</h3><table>${rows}</table></div>`;
+}
+function newCard(){
+  M.card=pickCard(); M.flipped=false; drawCard();
+}
+function drawCard(){
+  const c=M.card, tr=triad(c), ty=T[c.t];
+  const roles=['Fondamentale','Tierce','Quinte'];
+  const det=['',ROLE[ty.iv[1]],ROLE[ty.iv[2]]];
+  $('#mbody').innerHTML=`<div class="mcard"><div class="name">${cname(c)}</div>
+   ${M.flipped?`<div class="triad">${tr.map((n,i)=>`<div><div class="n">${n}</div><div class="r">${roles[i]}</div><div class="d">${det[i]}</div></div>`).join('')}</div>`
+   :`<div class="ask">Récite dans ta tête : fondamentale, tierce, quinte…</div>`}</div>
+   ${M.flipped?`<div class="row2"><button class="btn" id="cBad">À revoir</button><button class="btn primary" id="cGood">Je savais ✓</button></div><button class="btn ghost" id="cPlay" style="width:100%">▶ Écouter l’accord</button>`
+   :`<button class="btn primary next" id="cFlip">Retourner la carte</button>`}`;
+  if(M.flipped){
+    $('#cBad').onclick=()=>{setBox(c,false);renderMastery();newCard()};
+    $('#cGood').onclick=()=>{setBox(c,true);renderMastery();newCard()};
+    $('#cPlay').onclick=()=>playTriad(c);
+  }else $('#cFlip').onclick=()=>{M.flipped=true;drawCard()};
+}
+function newQuiz(){
+  M.card=pickCard(); M.ans=[null,null]; M.active=1; M.checked=false; drawQuiz();
+}
+function noteStr(a){return a?LETTERS[a[0]]+ACC[a[1]]:''}
+function drawQuiz(fb=''){
+  const c=M.card, tr=triad(c), roles=['Fondamentale','Tierce','Quinte'];
+  const slot=(i)=>{
+    if(i===0)return `<div class="slot given"><div class="n">${tr[0]}</div><div class="r">${roles[0]}</div></div>`;
+    const v=noteStr(M.ans[i-1]); let cls='slot';
+    if(M.checked)cls+=v===tr[i]?' ok':' bad'; else if(M.active===i)cls+=' active';
+    return `<div class="${cls}" data-s="${i}"><div class="n">${v||'?'}</div><div class="r">${roles[i]}</div>${M.checked&&v!==tr[i]?`<div class="fix">→ ${tr[i]}</div>`:''}</div>`;
+  };
+  $('#mbody').innerHTML=`<div class="mcard" style="min-height:0;padding:20px 14px"><div class="name">${cname(c)}</div><div class="slots">${[0,1,2].map(slot).join('')}</div></div>
+  ${M.checked?`${fb}<div class="row2"><button class="btn" id="qPlay">▶ Écouter</button><button class="btn primary" id="qNext">Suivant →</button></div>`
+  :`<div class="pad">${LETTERS.map((l,i)=>`<button data-l="${i}">${l}</button>`).join('')}</div>
+   <div class="acc"><button data-a="-1">♭</button><button data-a="0">♮</button><button data-a="1">♯</button></div>
+   <button class="btn primary next" id="qCheck">Vérifier</button>`}`;
+  document.querySelectorAll('.slot[data-s]').forEach(el=>el.onclick=()=>{if(M.checked)return;M.active=+el.dataset.s;drawQuiz()});
+  if(M.checked){$('#qPlay').onclick=()=>playTriad(c);$('#qNext').onclick=newQuiz;return}
+  document.querySelectorAll('.pad button').forEach(b=>b.onclick=()=>{
+    M.ans[M.active-1]=[+b.dataset.l,0];
+    M.lastFilled=M.active;
+    if(M.active===1&&!M.ans[1])M.active=2;
+    drawQuiz();
+  });
+  document.querySelectorAll('.acc button').forEach(b=>b.onclick=()=>{
+    const i=(M.lastFilled||M.active)-1; if(!M.ans[i])return;
+    M.ans[i]=[M.ans[i][0],+b.dataset.a]; drawQuiz();
+  });
+  $('#qCheck').onclick=()=>{
+    if(!M.ans[0]||!M.ans[1]){drawQuiz('');$('#mbody').insertAdjacentHTML('beforeend','<div class="fb info" style="margin-top:10px">Choisis la tierce et la quinte : touche une lettre, puis ♭ ou ♯ si besoin.</div>');return}
+    M.checked=true;
+    const good=noteStr(M.ans[0])===tr[1]&&noteStr(M.ans[1])===tr[2];
+    setBox(c,good); renderMastery();
+    let msg=good?'<div class="verdict">Bravo !</div>':'<div class="verdict">Pas tout à fait.</div>';
+    const lettersOk=M.ans[0][0]===(c.r[0]+2)%7&&M.ans[1][0]===(c.r[0]+4)%7;
+    if(!good&&!lettersOk)msg+=`<p>Rappel : une note sur deux depuis ${nm(c.r)} → ${[0,2,4].map(k=>LETTERS[(c.r[0]+k)%7]).join(' – ')}.</p>`;
+    else if(!good)msg+='<p>Les lettres sont justes : il ne reste que l’altération à corriger.</p>';
+    msg+=`<p class="tip">${T[c.t].tip}</p>`;
+    drawQuiz(`<div class="fb ${good?'good':'wrong'}">${msg}</div>`);
+  };
+}
+document.querySelectorAll('#mtabs button').forEach(b=>b.onclick=()=>memoTab(b.dataset.t));
+document.querySelectorAll('#segType button').forEach(b=>b.onclick=()=>{DATA.memoOpts.type=b.dataset.v;save();memoTab(DATA.memoOpts.tab)});
+document.querySelectorAll('#segRoots button').forEach(b=>b.onclick=()=>{DATA.memoOpts.roots=b.dataset.v;save();memoTab(DATA.memoOpts.tab)});
+
+/* ---------- Événements ---------- */
+$('#back').onclick=renderHome;
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+$('#next').onclick=()=>{newRound();window.scrollTo({top:0,behavior:'smooth'})};
+$('#clear').onclick=()=>{if(S.answered)return;S.sel.clear();clearKeys();$('#fb').innerHTML=''};
+$('#hear').onclick=()=>playNotes([...S.sel],false);
+$('#check').onclick=checkBuild;
+$('#playChord').onclick=()=>playNotes(S.q.notes,false);
+$('#playArp').onclick=()=>playNotes(S.q.notes,true);
+$('#optNames').onchange=e=>{DATA.opts.names=e.target.checked;save()};
+$('#optNat').onchange=e=>{DATA.opts.naturals=e.target.checked;save()};
+let resetArmed=false;
+$('#reset').onclick=e=>{
+  if(!resetArmed){resetArmed=true;e.target.textContent='Touche encore pour confirmer la remise à zéro';setTimeout(()=>{resetArmed=false;e.target.textContent='Réinitialiser ma progression'},4000);return}
+  DATA.stats={};DATA.memo={};save();resetArmed=false;e.target.textContent='Réinitialiser ma progression';renderHome();
+};
+renderHome();
+</script>
+</body>
+</html>
