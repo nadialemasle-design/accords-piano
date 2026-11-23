@@ -276,6 +276,55 @@ header h1{font-size:24px}
 .tile .tv{color:var(--ink);font-size:21px}
 .newstar{background:#f6ead0;border:1px solid var(--gold)}
 .confetti{width:auto;height:auto;border-radius:0;font-family:serif;background:none!important}
+
+/* ===== Entre-deux : piano + couleurs gaies ===== */
+:root{--bg:#fbf6ec;--card:#fff;--ink:#2b2735;--muted:#8a8197;--line:#ece3d3;
+--pri:#6a4cdc;--pri-d:#4f36b5;--pri-soft:#efeaff;--gold:#f2b632;--gold-d:#c98e0c;--gold-l:#fff;
+--coral:#ff7a59;--coral-d:#e05a3a;--teal:#1fa79a;--teal-d:#16867b;
+--ok:#1fa79a;--ok-d:#16867b;--ok-soft:#ddf4f1;--bad:#ff6b5b;--bad-d:#d9483a;--bad-soft:#ffe6e2}
+.btn.primary,.btn.green,.btn.red{background:var(--pri);border-color:var(--pri-d);color:#fff;box-shadow:0 3px 0 var(--pri-d)}
+.tabs button.on,.seg button.on{background:var(--pri-soft);color:var(--pri)}
+.stat.fire{color:var(--coral-d)} .stat.xp{color:var(--gold-d)}
+.goalic{color:var(--pri)}
+.pbar i{background:linear-gradient(90deg,var(--gold),var(--coral))}
+.kb-wrap{background:#2b2735;border-bottom-color:#1b1823;box-shadow:inset 0 4px 0 var(--coral)}
+.lesson b,.method b,.ex-notes,.mastery b,.triad .n,.slot .n{color:var(--pri)}
+.method .step,.alpha span.hi{background:var(--pri);color:#fff}
+.lesson .rep,.method .rep{background:var(--pri-soft)}
+.pips i.l1{background:#d9d0fb}.pips i.l2{background:#a996f0}.pips i.l3{background:var(--pri)}
+.slot.active{border-color:var(--pri);background:var(--pri-soft)}
+.w.sel{background:var(--pri-soft);color:var(--pri)} .b.sel{background:var(--pri)}
+.opts .btn.cur{background:var(--pri-soft);border-color:var(--pri);color:var(--pri)}
+.combo{color:var(--coral-d)}
+.measures{border-left-color:var(--pri);border-right-color:var(--pri)}
+.measures span.ok::after{content:"♩";color:var(--teal-d)}
+.measures span.bad::after{color:var(--bad)}
+/* mouvements colorés */
+.move{--mc:var(--pri);--ms:var(--pri-soft);border-top:6px solid var(--mc)}
+.move.m2{--mc:var(--coral);--ms:#ffe9e2}
+.move.m3{--mc:var(--teal);--ms:#ddf4f1}
+.mv-t{color:var(--mc)}
+.staff .clef{color:var(--mc)}
+.staff .lines{opacity:.35}
+.staff .bar{border-color:var(--ink);opacity:.5}
+.pnote .head{border-color:var(--mc);background:#fff}
+.pnote .head b{color:var(--mc)}
+.pnote .stem{background:var(--mc)}
+.pnote.s1 .head,.pnote.s2 .head{background:var(--ms);border-color:var(--mc)}
+.pnote.s3 .head{background:var(--mc);border-color:var(--mc)} .pnote.s3 .head b{color:#fff}
+.pnote .play{background:var(--mc);color:#fff}
+.pnote.next .head{animation:halo2 1.8s infinite}
+@keyframes halo2{0%{box-shadow:0 0 0 0 rgba(242,182,50,.75)}70%{box-shadow:0 0 0 14px rgba(242,182,50,0)}100%{box-shadow:0 0 0 0 rgba(242,182,50,0)}}
+.plabel .st{color:var(--gold)}
+/* carte de correction */
+.sheet-in{border-top-color:var(--teal)}
+.good .sh-ic{background:var(--teal)} .bad .sh-ic{background:var(--bad)}
+.good .sh-t{color:var(--teal-d)}
+.tile .tt{color:#fff}
+.tile:nth-child(1) .tt{background:var(--gold-d)} .tile:nth-child(2) .tt{background:var(--teal)} .tile:nth-child(3) .tt{background:var(--coral)}
+.tile:nth-child(1) .tv{color:var(--gold-d)} .tile:nth-child(2) .tv{color:var(--teal-d)} .tile:nth-child(3) .tv{color:var(--coral-d)}
+.newstar{background:#fff5dc;border-color:var(--gold)}
+.switch input:checked{background:var(--pri)}
 </style>
 </head>
 <body>
@@ -515,10 +564,10 @@ function mascot(mood='happy',size=86){
     sad:'<path d="M39 111 Q50 101 62 107" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/>'}[mood];
   return `<svg class="mascot" width="${size}" height="${size*1.15}" viewBox="0 0 120 138" aria-hidden="true">
   <ellipse cx="52" cy="132" rx="34" ry="5" fill="rgba(0,0,0,.08)"/>
-  <rect x="79" y="10" width="9" height="84" rx="4.5" fill="#1c1a1f"/>
-  <path d="M84 12 C108 22 116 44 103 70 C104 50 98 38 84 34 Z" fill="#1c1a1f"/>
-  <ellipse cx="52" cy="96" rx="40" ry="31" fill="#2a2730" transform="rotate(-16 52 96)"/>
-  <ellipse cx="40" cy="86" rx="14" ry="8" fill="#4a4552" transform="rotate(-16 40 86)"/>
+  <rect x="79" y="10" width="9" height="84" rx="4.5" fill="#4f36b5"/>
+  <path d="M84 12 C108 22 116 44 103 70 C104 50 98 38 84 34 Z" fill="#4f36b5"/>
+  <ellipse cx="52" cy="96" rx="40" ry="31" fill="#6a4cdc" transform="rotate(-16 52 96)"/>
+  <ellipse cx="40" cy="86" rx="14" ry="8" fill="#8d74ff" transform="rotate(-16 40 86)"/>
   <circle cx="37" cy="93" r="9.5" fill="#fff"/><circle cx="62" cy="87" r="9.5" fill="#fff"/>
   <circle cx="39" cy="94" r="4.8" fill="#2a2840"/><circle cx="64" cy="88" r="4.8" fill="#2a2840"/>
   <circle cx="40.5" cy="92.5" r="1.6" fill="#fff"/><circle cx="65.5" cy="86.5" r="1.6" fill="#fff"/>
@@ -656,7 +705,7 @@ function endSession(){
   SESS=null;
 }
 function confetti(){
-  const cols=['#1c1a1f','#c9a23a','#94741a','#8f2f2f'];
+  const cols=['#6a4cdc','#f2b632','#ff7a59','#1fa79a'];
   for(let i=0;i<45;i++){
     const d=document.createElement('div'); d.className='confetti'; d.textContent=pick(['♪','♫','♩','♬','𝄞']);
     d.style.left=Math.random()*100+'vw'; d.style.color=pick(cols); d.style.fontSize=(18+Math.random()*18)+'px';
@@ -690,7 +739,7 @@ function renderHome(){
   $('#optNames').checked=DATA.opts.names; $('#optNat').checked=DATA.opts.naturals;
   let nextSet=false;
   const XS=[30,57,84], YS=[74,60,46];
-  $('#path').innerHTML=MOVES.map(mv=>{
+  $('#path').innerHTML=MOVES.map((mv,mi)=>{
     let notes='',labels='';
     mv.ids.forEach((id,j)=>{
       let stars,lbl,badge;
@@ -701,7 +750,7 @@ function renderHome(){
       notes+=`<button class="${cls}" data-id="${id}" style="left:${XS[j]}%;top:${YS[j]}px" aria-label="${lbl}">${tag}<span class="stem"></span><span class="head"><b>${badge}</b></span></button>`;
       labels+=`<div class="plabel" data-id="${id}" style="left:${XS[j]}%">${SHORT[id]}<div class="st">${'★'.repeat(stars)}<s>${'★'.repeat(3-stars)}</s></div></div>`;
     });
-    return `<div class="move"><div class="mv-h"><span class="mv-t">${mv.t}</span><span class="mv-s">${mv.s}</span></div>
+    return `<div class="move m${mi+1}"><div class="mv-h"><span class="mv-t">${mv.t}</span><span class="mv-s">${mv.s}</span></div>
       <div class="staff"><div class="lines"></div><div class="clef">𝄞</div><div class="bar"></div>${notes}</div><div class="plabels">${labels}</div></div>`;
   }).join('');
   document.querySelectorAll('#path .pnote,#path .plabel').forEach(b=>b.onclick=()=>{ac();b.dataset.id==='memo'?openMemo():openLevel(b.dataset.id)});
