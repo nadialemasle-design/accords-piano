@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Accords au piano – révisions par niveau</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#f6f4ff; --card:#fff; --ink:#2a2840; --muted:#8b87a3; --line:#e6e2f3;
@@ -325,6 +325,31 @@ header h1{font-size:24px}
 .tile:nth-child(1) .tv{color:var(--gold-d)} .tile:nth-child(2) .tv{color:var(--teal-d)} .tile:nth-child(3) .tv{color:var(--coral-d)}
 .newstar{background:#fff5dc;border-color:var(--gold)}
 .switch input:checked{background:var(--pri)}
+
+/* ===== Police simple + progression ===== */
+header h1,.question,.mcard .name,.end h2,.ex-title,.method h3,.mv-t,.sh-t{font-family:Manrope,system-ui,sans-serif;font-weight:800;letter-spacing:-.01em}
+header h1{font-size:22px}.question{font-size:28px}.question.sm{font-size:19px}.mcard .name{font-size:34px}.end h2{font-size:28px}.mv-t{font-size:18px}.sh-t{font-size:20px}
+.prog{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:16px;box-shadow:0 4px 0 var(--line)}
+.prog-h{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;font-size:14px;margin-bottom:8px}
+.prog-h b{font-size:22px;color:var(--pri)}
+.track{display:grid;grid-template-columns:3fr 3fr 2fr;gap:4px;margin-bottom:8px}
+.track div{height:14px;border-radius:8px;background:var(--line);overflow:hidden}
+.track i{display:block;height:100%;border-radius:8px;transition:width .5s}
+.track div:nth-child(1) i{background:var(--pri)}.track div:nth-child(2) i{background:var(--coral)}.track div:nth-child(3) i{background:var(--teal)}
+.steps{display:grid;grid-template-columns:3fr 3fr 2fr;gap:4px;font-size:11.5px;font-weight:800;color:var(--muted)}
+.steps span.on{color:var(--ink)}
+.prog-now{margin-top:10px;font-size:13px;font-weight:700;color:var(--muted)}
+.prog-now b{color:var(--ink)}
+.mv-h{justify-content:space-between}
+.mv-p{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--mc);margin-left:auto}
+.mv-p .mini{width:54px;height:7px;border-radius:5px;background:var(--line);overflow:hidden}
+.mv-p .mini i{display:block;height:100%;background:var(--mc)}
+.move.done{box-shadow:0 4px 0 var(--mc)}
+.move.later{opacity:.72}
+.link{display:flex;flex-direction:column;align-items:center;margin:-6px 0 8px;color:var(--muted);font-size:11.5px;font-weight:800}
+.link .dash{width:0;height:22px;border-left:3px dotted #d8ccb6}
+.link .arr{font-size:16px;line-height:1;color:#c9bca3}
+.link.open .dash{border-left-color:var(--gold)} .link.open .arr{color:var(--gold-d)}
 </style>
 </head>
 <body>
@@ -342,6 +367,7 @@ header h1{font-size:24px}
       <div class="goalic">𝄞</div>
       <div class="gt"><span id="goalTxt"></span><small id="goalSub"></small><div class="pbar"><i id="goalBar"></i></div></div>
     </div>
+    <div class="prog" id="prog"></div>
     <div class="path" id="path"></div>
     <div class="settings">
       <label class="switch">Afficher le nom des touches blanches<input type="checkbox" id="optNames"></label>
@@ -739,6 +765,15 @@ function renderHome(){
   $('#optNames').checked=DATA.opts.names; $('#optNat').checked=DATA.opts.naturals;
   let nextSet=false;
   const XS=[30,57,84], YS=[74,60,46];
+  const starsOf=id=>id==='memo'?memoStars():(DATA.stars[id]||0);
+  const mvStats=MOVES.map(mv=>{const got=mv.ids.reduce((s,id)=>s+starsOf(id),0);return {got,max:mv.ids.length*3}});
+  const totGot=mvStats.reduce((s,m)=>s+m.got,0), totMax=mvStats.reduce((s,m)=>s+m.max,0);
+  let curMv=mvStats.findIndex(m=>m.got<m.max); if(curMv<0)curMv=MOVES.length-1;
+  const curId=MOVES.flatMap(m=>m.ids).find(id=>starsOf(id)<3);
+  $('#prog').innerHTML=`<div class="prog-h"><span>Ma progression</span><b>${Math.round(totGot/totMax*100)} %</b></div>
+    <div class="track">${mvStats.map(m=>`<div><i style="width:${m.got/m.max*100}%"></i></div>`).join('')}</div>
+    <div class="steps">${MOVES.map((m,i)=>`<span class="${i<=curMv?'on':''}">${m.t.replace('Mouvement','Mvt')}</span>`).join('')}</div>
+    <div class="prog-now">${curId?`Tu en es à : <b>${MOVES[curMv].t} · ${SHORT[curId]}</b> · ${totGot}/${totMax} ★`:'<b>Partition complète !</b> Toutes les étoiles sont à toi ★'}</div>`;
   $('#path').innerHTML=MOVES.map((mv,mi)=>{
     let notes='',labels='';
     mv.ids.forEach((id,j)=>{
@@ -750,8 +785,10 @@ function renderHome(){
       notes+=`<button class="${cls}" data-id="${id}" style="left:${XS[j]}%;top:${YS[j]}px" aria-label="${lbl}">${tag}<span class="stem"></span><span class="head"><b>${badge}</b></span></button>`;
       labels+=`<div class="plabel" data-id="${id}" style="left:${XS[j]}%">${SHORT[id]}<div class="st">${'★'.repeat(stars)}<s>${'★'.repeat(3-stars)}</s></div></div>`;
     });
-    return `<div class="move m${mi+1}"><div class="mv-h"><span class="mv-t">${mv.t}</span><span class="mv-s">${mv.s}</span></div>
-      <div class="staff"><div class="lines"></div><div class="clef">𝄞</div><div class="bar"></div>${notes}</div><div class="plabels">${labels}</div></div>`;
+    const ms=mvStats[mi], st=ms.got>=ms.max?' done':mi>curMv?' later':'';
+    const link=mi<MOVES.length-1?`<div class="link${mi<curMv?' open':''}"><div class="dash"></div><div class="arr">▼</div>${mi<curMv?'Débloqué':'Ensuite'}</div>`:'';
+    return `<div class="move m${mi+1}${st}"><div class="mv-h"><div><span class="mv-t">${mv.t}</span> <span class="mv-s">${mv.s}</span></div><div class="mv-p"><div class="mini"><i style="width:${ms.got/ms.max*100}%"></i></div>${ms.got}/${ms.max} ★</div></div>
+      <div class="staff"><div class="lines"></div><div class="clef">𝄞</div><div class="bar"></div>${notes}</div><div class="plabels">${labels}</div></div>${link}`;
   }).join('');
   document.querySelectorAll('#path .pnote,#path .plabel').forEach(b=>b.onclick=()=>{ac();b.dataset.id==='memo'?openMemo():openLevel(b.dataset.id)});
 }
