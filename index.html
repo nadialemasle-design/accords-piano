@@ -350,6 +350,24 @@ header h1{font-size:22px}.question{font-size:28px}.question.sm{font-size:19px}.m
 .link .dash{width:0;height:22px;border-left:3px dotted #d8ccb6}
 .link .arr{font-size:16px;line-height:1;color:#c9bca3}
 .link.open .dash{border-left-color:var(--gold)} .link.open .arr{color:var(--gold-d)}
+
+/* ===== Rangées de niveaux à icônes ===== */
+.lrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:relative;margin-top:12px}
+.lrow::before{content:"";position:absolute;left:16%;right:16%;top:36px;height:4px;border-radius:4px;background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 13px);z-index:0}
+.lvl{position:relative;z-index:1;background:none;border:none;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0}
+.lvl .ic{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;position:relative;background:conic-gradient(var(--mc) calc(var(--p)*1%),var(--line) 0)}
+.lvl .ic::before{content:"";position:absolute;inset:5px;border-radius:50%;background:#fff}
+.lvl .ic span{position:relative;font-size:28px;line-height:1}
+.lvl.s3 .ic::before{background:var(--ms)}
+.lvl .num{position:absolute;top:-4px;right:calc(50% - 46px);background:var(--mc);color:#fff;font-size:11px;font-weight:800;padding:2px 6px;border-radius:999px;border:2px solid #fff}
+.lvl .ok{position:absolute;top:44px;left:calc(50% - 42px);width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;font-size:13px;font-weight:800;display:grid;place-items:center;border:2px solid #fff}
+.lvl .nm{font-size:12.5px;font-weight:800;line-height:1.2;text-align:center;min-height:30px}
+.lvl .st{color:var(--gold);font-size:12px;letter-spacing:1px}.lvl .st s{color:#e3d8c4;text-decoration:none}
+.lvl .tag{position:absolute;top:-24px;left:50%;transform:translateX(-50%);background:var(--mc);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap;z-index:2}
+.lvl.next .ic{animation:halo2 1.8s infinite}
+.lvl:active .ic{transform:scale(.94)}
+.move .lrow{margin-top:26px}
+.lrow.two::before{right:50%}
 </style>
 </head>
 <body>
@@ -742,7 +760,8 @@ function confetti(){
 }
 
 /* ---------- Accueil : le parcours ---------- */
-const SHORT={memo:'Par cœur','1.1':'Majeurs et mineurs','1.2':'Renverse­ments','2':'dim, aug, sus','3':'Septièmes','3.2':'Renverse­ments des 7e','4':'9e, 11e, 13e',mix:'Tout mélanger'};
+const ICON={memo:'🧠','1.1':'🎹','1.2':'🔄','2':'🎨','3':'7️⃣','3.2':'🔁','4':'✨',mix:'🔀'};
+const SHORT={memo:'Par cœur','1.1':'Majeurs et mineurs','1.2':'Renversements','2':'dim, aug, sus','3':'Septièmes','3.2':'Renversements des 7e','4':'9e, 11e, 13e',mix:'Tout mélanger'};
 const MOVES=[
   {t:'Mouvement I',s:'Les accords de 3 notes',ids:['memo','1.1','1.2']},
   {t:'Mouvement II',s:'Couleurs et septièmes',ids:['2','3','3.2']},
@@ -775,22 +794,23 @@ function renderHome(){
     <div class="steps">${MOVES.map((m,i)=>`<span class="${i<=curMv?'on':''}">${m.t.replace('Mouvement','Mvt')}</span>`).join('')}</div>
     <div class="prog-now">${curId?`Tu en es à : <b>${MOVES[curMv].t} · ${SHORT[curId]}</b> · ${totGot}/${totMax} ★`:'<b>Partition complète !</b> Toutes les étoiles sont à toi ★'}</div>`;
   $('#path').innerHTML=MOVES.map((mv,mi)=>{
-    let notes='',labels='';
-    mv.ids.forEach((id,j)=>{
-      let stars,lbl,badge;
-      if(id==='memo'){stars=memoStars();lbl='Par cœur : fondamentale, tierce, quinte';badge='♪'}
-      else{const lv=LEVELS.find(l=>l.id===id);stars=DATA.stars[id]||0;lbl=lv.sub;badge=lv.badge}
-      let cls='pnote s'+stars, tag='';
-      if(!nextSet&&stars<3){nextSet=true;cls+=' next';tag='<span class="play">À jouer</span>'}
-      notes+=`<button class="${cls}" data-id="${id}" style="left:${XS[j]}%;top:${YS[j]}px" aria-label="${lbl}">${tag}<span class="stem"></span><span class="head"><b>${badge}</b></span></button>`;
-      labels+=`<div class="plabel" data-id="${id}" style="left:${XS[j]}%">${SHORT[id]}<div class="st">${'★'.repeat(stars)}<s>${'★'.repeat(3-stars)}</s></div></div>`;
+    let tiles='';
+    mv.ids.forEach(id=>{
+      const stars=starsOf(id), lbl=id==='memo'?'Par cœur : fondamentale, tierce, quinte':LEVELS.find(l=>l.id===id).sub;
+      const num=id==='memo'?'':(LEVELS.find(l=>l.id===id).badge);
+      let cls='lvl s'+stars, tag='';
+      if(!nextSet&&stars<3){nextSet=true;cls+=' next';tag='<span class="tag">▶ À jouer</span>'}
+      tiles+=`<button class="${cls}" data-id="${id}" aria-label="${lbl}">${tag}
+        <div class="ic" style="--p:${Math.round(stars/3*100)}"><span>${ICON[id]}</span></div>
+        ${num&&num!=='∞'?`<span class="num">${num}</span>`:''}${stars>=3?'<span class="ok">✓</span>':''}
+        <div class="nm">${SHORT[id].replace('­','')}</div><div class="st">${'★'.repeat(stars)}<s>${'★'.repeat(3-stars)}</s></div></button>`;
     });
     const ms=mvStats[mi], st=ms.got>=ms.max?' done':mi>curMv?' later':'';
     const link=mi<MOVES.length-1?`<div class="link${mi<curMv?' open':''}"><div class="dash"></div><div class="arr">▼</div>${mi<curMv?'Débloqué':'Ensuite'}</div>`:'';
     return `<div class="move m${mi+1}${st}"><div class="mv-h"><div><span class="mv-t">${mv.t}</span> <span class="mv-s">${mv.s}</span></div><div class="mv-p"><div class="mini"><i style="width:${ms.got/ms.max*100}%"></i></div>${ms.got}/${ms.max} ★</div></div>
-      <div class="staff"><div class="lines"></div><div class="clef">𝄞</div><div class="bar"></div>${notes}</div><div class="plabels">${labels}</div></div>${link}`;
+      <div class="lrow${mv.ids.length===2?' two':''}">${tiles}</div></div>${link}`;
   }).join('');
-  document.querySelectorAll('#path .pnote,#path .plabel').forEach(b=>b.onclick=()=>{ac();b.dataset.id==='memo'?openMemo():openLevel(b.dataset.id)});
+  document.querySelectorAll('#path .lvl').forEach(b=>b.onclick=()=>{ac();b.dataset.id==='memo'?openMemo():openLevel(b.dataset.id)});
 }
 
 /* ---------- Niveaux ---------- */
