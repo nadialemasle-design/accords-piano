@@ -408,6 +408,17 @@ header h1{font-size:22px}.question{font-size:28px}.question.sm{font-size:19px}.m
 .cc.cur{background:var(--pri);color:#fff;border-color:var(--pri-d);box-shadow:0 2px 0 var(--pri-d)}
 .cc.cur small i{background:#fff}
 .song-tip{background:var(--pri-soft);border-radius:14px;padding:12px 14px;font-size:14px;font-weight:600;line-height:1.5;margin-bottom:12px}
+
+.w.lh{background:#ffe3d8;color:var(--coral-d)} .b.lh{background:var(--coral)}
+.w.lh .dot{background:var(--coral)}
+.w.hit,.b.hit{filter:brightness(.82);transform:translateY(2px)}
+.w.hit.ok{background:#9fe0d8} .w.hit.lh{background:#ffb79f}
+.kb.k3 .w{font-size:8.5px;margin:0 1px}
+.howto{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-size:14px;font-weight:600;line-height:1.5;margin-bottom:12px}
+.howto b{color:var(--pri)}
+.howto .lh{color:var(--coral-d)} .howto .rh{color:var(--teal-d)}
+#segPlay{margin-bottom:12px}
+#segPlay button{font-size:12px}
 </style>
 </head>
 <body>
@@ -490,7 +501,10 @@ header h1{font-size:22px}.question{font-size:28px}.question.sm{font-size:19px}.m
       <div class="cn" id="nowName"></div><div class="cnotes" id="nowNotes"></div>
       <div class="beats" id="beats"></div><div class="nx" id="nowNext"></div>
     </div>
+    <div class="seg" id="segPlay"><button data-v="block">Plaqué · débutant</button><button data-v="two">2 mains</button><button data-v="arp">Arpèges · interm.</button></div>
     <div class="kb-wrap"><div class="kb" id="skb"></div></div>
+    <div class="legend" id="sLegend"><span style="--c:var(--coral)">main gauche</span><span style="--c:var(--teal)">main droite</span></div>
+    <div id="howTo"></div>
     <div class="ctrl"><button class="btn primary" id="sPlay">▶ Jouer la grille</button>
       <label class="tempo">♩ <input type="range" id="sTempo" min="40" max="130" step="2"><span id="sBpm"></span></label></div>
     <label class="switch" style="padding:4px 2px 12px">Enchaînement facile (doigts qui bougent peu)<input type="checkbox" id="sSmooth"></label>
@@ -1115,7 +1129,7 @@ function drawQuiz(fb=''){
 
 
 /* ---------- Répertoire ---------- */
-DATA.songs=DATA.songs||{}; if(DATA.smooth===undefined)DATA.smooth=true;
+DATA.songs=DATA.songs||{}; if(DATA.smooth===undefined)DATA.smooth=true; DATA.songMode=DATA.songMode||'block';
 const SONGS=[
  {id:'imagine',title:'Imagine',artist:'John Lennon (1971)',cover:'☮️',bg:'#efeaff',key:'Do majeur',bpm:76,lv:'Débutant +',pd:false,
   tip:'Le couplet balance entre Do et Do maj7 : on ajoute simplement Si (la septième majeure) au-dessus de Do – Mi – Sol. Commence par la main droite seule, une main gauche simple (la fondamentale) viendra ensuite.',
@@ -1172,17 +1186,32 @@ function voice(c,prev){
   const cost=v=>{const n=Math.max(v.length,prev.length);let s=0;for(let i=0;i<n;i++)s+=Math.abs((v[Math.min(i,v.length-1)])-(prev[Math.min(i,prev.length-1)]));return s};
   return vs.sort((a,b)=>cost(a.v)-cost(b.v))[0].v;
 }
-const SG={song:null,seq:[],idx:0,timer:null,beat:0,playing:false,bpm:80};
+const SG={song:null,seq:[],idx:0,timer:null,beat:0,sub:0,playing:false,bpm:80,off:0};
 const skEls=[];
 function buildSongKb(){
-  const kb=$('#skb'); kb.innerHTML=''; skEls.length=0; const wPct=100/14; let wi=0;
-  for(let n=0;n<24;n++){
+  const oct=DATA.songMode==='block'?2:3; SG.off=oct===3?12:0;
+  const kb=$('#skb'); kb.innerHTML=''; kb.classList.toggle('k3',oct===3); skEls.length=0; const wPct=100/(oct*7); let wi=0;
+  for(let n=0;n<oct*12;n++){
     const li=LETTER_PC.indexOf(n%12), el=document.createElement('div');
     if(li>=0){el.className='w';el.textContent=(DATA.opts.names||li===0)?LETTERS[li]:'';wi++}
     else{el.className='b';el.style.left=`calc(${wi*wPct}% - ${wPct*0.32}%)`;el.style.width=`${wPct*0.64}%`}
-    el.onclick=()=>{const c=ac();if(c)tone(n,c.currentTime+0.01,1.4,0.3)};
+    el.onclick=()=>{const c=ac();if(c)tone(n-SG.off,c.currentTime+0.01,1.4,0.3)};
     kb.appendChild(el); skEls[n]=el;
   }
+}
+const lhOf=c=>{const rp=rootPc(c.r);return {root:rp,fifth:rp+7<12?rp+7:rp-5}};
+function stepKeys(st){const rh=st.v.map(x=>x+SG.off);const lh=SG.off?[lhOf(st.c).root]:[];return {rh,lh}}
+const snd=k=>k-SG.off;
+function arpPattern(v){return v.length===3?[v[0],v[1],v[2],v[1]]:[v[0],v[1],v[2],v[3],v[2],v[1]]}
+function renderHowTo(){
+  const m=DATA.songMode;
+  $('#sLegend').hidden=m==='block';
+  document.querySelectorAll('#segPlay button').forEach(b=>b.classList.toggle('on',b.dataset.v===m));
+  $('#howTo').innerHTML=`<div class="howto">${m==='block'
+   ?'<b>Plaqué :</b> joue les 3 notes ensemble avec la <span class="rh">main droite</span>, une fois par accord. Doigts 1-3-5 (pouce, majeur, auriculaire).'
+   :m==='two'
+   ?'<b>2 mains :</b> la <span class="lh">main gauche</span> tient la fondamentale dans le grave (auriculaire, doigt 5). La <span class="rh">main droite</span> plaque l’accord sur chaque temps. Commence lentement, puis accélère.'
+   :'<b>Arpèges :</b> la <span class="lh">main gauche</span> joue la fondamentale sur le 1<sup>er</sup> temps, puis la quinte au milieu de la mesure. La <span class="rh">main droite</span> égrène l’accord en croches : bas – milieu – haut – milieu (doigts 1-3-5-3). Astuce : baisse le tempo à 50-60 au début.'}</div>`;
 }
 function openSongs(){
   stopSong(); showView('songs'); $('#back').hidden=false; $('#title').textContent='Répertoire';
@@ -1201,7 +1230,7 @@ function openSong(id){
   $('#songHead').innerHTML=`<div class="meta">${s.artist} · ${s.key} · ${s.lv}</div><div class="note">${s.pd?'Œuvre du domaine public · grille simplifiée':'Grille d’accords simplifiée · paroles et mélodie non incluses'}</div>`;
   $('#songTip').innerHTML=`<div class="song-tip">💡 ${s.tip}</div>`;
   $('#sTempo').value=SG.bpm; $('#sBpm').textContent=SG.bpm; $('#sSmooth').checked=DATA.smooth;
-  buildSongKb(); buildSeq(); renderSections(); showStep(0,false);
+  buildSongKb(); renderHowTo(); buildSeq(); renderSections(); showStep(0,false);
 }
 function buildSeq(){
   SG.seq=[]; let prev=null;
@@ -1221,30 +1250,49 @@ function showStep(k,sound){
   $('#nowNotes').textContent=chNotes(st.c).join(' – ');
   const nx=SG.seq[k+1]; $('#nowNext').textContent=nx?'Ensuite : '+chName(nx.c):'Fin du morceau';
   $('#beats').innerHTML=Array.from({length:Math.min(st.c.beats,8)},(_,i)=>`<i class="${i===0?'first':''}"></i>`).join('');
-  skEls.forEach(el=>{el.classList.remove('ok');const d=el.querySelector('.dot');if(d)d.remove()});
-  st.v.forEach(n=>{const el=skEls[n];el.classList.add('ok');const d=document.createElement('span');d.className='dot';el.appendChild(d)});
+  skEls.forEach(el=>{el.classList.remove('ok','lh','hit');const d=el.querySelector('.dot');if(d)d.remove()});
+  const K=stepKeys(st);
+  const put=(n,cls)=>{const el=skEls[n];if(!el)return;el.classList.add(cls);const d=document.createElement('span');d.className='dot';el.appendChild(d)};
+  K.rh.forEach(n=>put(n,'ok')); K.lh.forEach(n=>put(n,'lh'));
   document.querySelectorAll('.cc').forEach(b=>b.classList.toggle('cur',+b.dataset.si===st.si&&+b.dataset.ci===st.ci));
   const cur=document.querySelector('.cc.cur'); if(cur&&SG.playing)cur.scrollIntoView({block:'nearest',behavior:'smooth'});
-  if(sound)playNotes(st.v,false);
+  if(sound)playNotes([...K.lh,...K.rh].map(snd),DATA.songMode==='arp');
 }
+function hit(k,ms){const el=skEls[k];if(!el)return;el.classList.add('hit');setTimeout(()=>el.classList.remove('hit'),ms)}
 function tick(){
-  const st=SG.seq[SG.idx];
-  if(SG.beat===0){showStep(SG.idx,true)}
-  const dots=document.querySelectorAll('#beats i'); dots.forEach((d,i)=>d.classList.toggle('on',i===SG.beat));
-  const c=ac(); if(c)blip(SG.beat===0?1568:1175,c.currentTime+0.005,0.04,'sine',0.05);
-  SG.beat++;
-  if(SG.beat>=st.c.beats){SG.beat=0;SG.idx++;
-    if(SG.idx>=SG.seq.length){DATA.songs[SG.song.id]=(DATA.songs[SG.song.id]||0)+1;addXP(20);stopSong();showStep(0,false);
-      fx('win');$('#nowNext').textContent='Bravo, morceau terminé ! +20 ♪';return}}
-  SG.timer=setTimeout(tick,60000/SG.bpm);
+  const st=SG.seq[SG.idx], m=DATA.songMode, sub=m==='arp'?2:1, step=60000/SG.bpm/sub, c=ac();
+  const beat=Math.floor(SG.sub/sub), onBeat=SG.sub%sub===0;
+  if(SG.sub===0)showStep(SG.idx,false);
+  const K=stepKeys(st), t0=c?c.currentTime+0.01:0, dur=st.c.beats*60/SG.bpm;
+  if(c){
+    if(m==='block'){ if(SG.sub===0)playNotes(st.v,false) }
+    else if(m==='two'){
+      if(SG.sub===0){tone(snd(K.lh[0]),t0,dur+0.3,0.3);hit(K.lh[0],dur*900)}
+      K.rh.forEach(k=>{tone(snd(k),t0,0.9,SG.sub===0?0.17:0.12);hit(k,200)});
+    }else{
+      const lh=lhOf(st.c);
+      if(SG.sub===0){tone(snd(lh.root),t0,dur/2+0.4,0.3);hit(lh.root,250)}
+      if(st.c.beats>=4&&SG.sub===st.c.beats){const f=lh.fifth;tone(snd(f),t0,dur/2+0.3,0.26);hit(f,250)}
+      const pat=arpPattern(K.rh), k=pat[SG.sub%pat.length];
+      tone(snd(k),t0,0.9,0.2); hit(k,step*0.9);
+    }
+    if(onBeat)blip(beat===0?1568:1175,t0,0.04,'sine',0.04);
+  }
+  if(onBeat)document.querySelectorAll('#beats i').forEach((d,i)=>d.classList.toggle('on',i===beat));
+  SG.sub++;
+  if(SG.sub>=st.c.beats*sub){SG.sub=0;SG.idx++;
+    if(SG.idx>=SG.seq.length){DATA.songs[SG.song.id]=(DATA.songs[SG.song.id]||0)+1;addXP(m==='block'?20:30);stopSong();showStep(0,false);
+      fx('win');$('#nowNext').textContent=`Bravo, morceau terminé ! +${m==='block'?20:30} ♪`;return}}
+  SG.timer=setTimeout(tick,step);
 }
 function playSong(){
   if(SG.playing){stopSong();return}
-  SG.playing=true; SG.beat=0; if(SG.idx>=SG.seq.length-1)SG.idx=0;
+  SG.playing=true; SG.sub=0; if(SG.idx>=SG.seq.length-1)SG.idx=0;
   $('#sPlay').textContent='⏸ Pause'; tick();
 }
-function stopSong(){clearTimeout(SG.timer);SG.timer=null;SG.playing=false;SG.beat=0;const b=$('#sPlay');if(b)b.textContent='▶ Jouer la grille';document.querySelectorAll('#beats i').forEach(d=>d.classList.remove('on'))}
+function stopSong(){clearTimeout(SG.timer);SG.timer=null;SG.playing=false;SG.sub=0;const b=$('#sPlay');if(b)b.textContent='▶ Jouer la grille';document.querySelectorAll('#beats i').forEach(d=>d.classList.remove('on'))}
 $('#sPlay').onclick=()=>{ac();playSong()};
+document.querySelectorAll('#segPlay button').forEach(b=>b.onclick=()=>{DATA.songMode=b.dataset.v;save();stopSong();buildSongKb();renderHowTo();showStep(Math.min(SG.idx,SG.seq.length-1),true)});
 $('#sTempo').oninput=e=>{SG.bpm=+e.target.value;$('#sBpm').textContent=SG.bpm};
 $('#sSmooth').onchange=e=>{DATA.smooth=e.target.checked;save();stopSong();buildSeq();showStep(Math.min(SG.idx,SG.seq.length-1),true)};
 
