@@ -435,6 +435,19 @@ header h1{font-size:22px}.question{font-size:28px}.question.sm{font-size:19px}.m
 .rg-row .c.L{background:var(--coral)} .rg-row .c.R{background:var(--teal)}
 .rg-row .c.now{outline:2.5px solid var(--ink);outline-offset:1px}
 .rg-row.cnt .c{background:none;color:var(--muted);height:12px}
+
+.player{position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0 2px;margin:0 -4px 6px;padding-left:4px;padding-right:4px}
+.player .now{padding:10px 14px;margin-bottom:8px;text-align:left}
+.nowrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.player .now .cn{font-size:30px}
+.player .now .cnotes{font-size:14px}
+.nowside{text-align:right}
+.player .beats{justify-content:flex-end;margin-top:0}
+.player .kb-wrap{margin-bottom:8px}
+.player .kb{height:130px}
+.player .rgrid{margin-bottom:8px;padding:6px 8px}
+.player .rg-row .c{height:14px}
+.player .ctrl{margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -513,17 +526,19 @@ header h1{font-size:22px}.question{font-size:28px}.question.sm{font-size:19px}.m
   <main id="songs" hidden></main>
   <main id="song" hidden>
     <div class="song-head" id="songHead"></div>
-    <div class="now">
-      <div class="cn" id="nowName"></div><div class="cnotes" id="nowNotes"></div>
-      <div class="beats" id="beats"></div><div class="nx" id="nowNext"></div>
+    <div class="player">
+      <div class="now">
+        <div class="nowrow"><div><div class="cn" id="nowName"></div><div class="cnotes" id="nowNotes"></div></div>
+        <div class="nowside"><div class="beats" id="beats"></div><div class="nx" id="nowNext"></div></div></div>
+      </div>
+      <div class="kb-wrap"><div class="kb" id="skb"></div></div>
+      <div class="rgrid" id="rgrid"></div>
+      <div class="ctrl"><button class="btn primary" id="sPlay">▶ Jouer la grille</button>
+        <label class="tempo">♩ <input type="range" id="sTempo" min="40" max="130" step="2"><span id="sBpm"></span></label></div>
     </div>
     <div class="styles" id="segPlay"></div>
-    <div class="rgrid" id="rgrid"></div>
-    <div class="kb-wrap"><div class="kb" id="skb"></div></div>
     <div class="legend" id="sLegend"><span style="--c:var(--coral)">main gauche</span><span style="--c:var(--teal)">main droite</span></div>
     <div id="howTo"></div>
-    <div class="ctrl"><button class="btn primary" id="sPlay">▶ Jouer la grille</button>
-      <label class="tempo">♩ <input type="range" id="sTempo" min="40" max="130" step="2"><span id="sBpm"></span></label></div>
     <label class="switch" style="padding:4px 2px 4px">Enchaînement facile (doigts qui bougent peu)<input type="checkbox" id="sSmooth"></label>
     <label class="switch" style="padding:4px 2px 12px"><span>Accords enrichis : ajouter la 9e (son plus moderne)</span><input type="checkbox" id="sRich"></label>
     <div id="songTip"></div>
@@ -1313,7 +1328,6 @@ function showStep(k,sound){
   const put=(n,cls)=>{const el=skEls[n];if(!el)return;el.classList.add(cls);const d=document.createElement('span');d.className='dot';el.appendChild(d)};
   K.rh.forEach(n=>put(n,'ok')); K.lh.forEach(n=>put(n,'lh'));
   document.querySelectorAll('.cc').forEach(b=>b.classList.toggle('cur',+b.dataset.si===st.si&&+b.dataset.ci===st.ci));
-  const cur=document.querySelector('.cc.cur'); if(cur&&SG.playing)cur.scrollIntoView({block:'nearest',behavior:'smooth'});
   if(DATA.songRich&&T[st.c.type].iv.length===3)$('#nowNotes').textContent+=' + '+spell(st.c.r,2,1)+' (9e)';
   if(sound)playNotes([...K.lh,...K.rh].map(snd),DATA.songMode!=='block'&&DATA.songMode!=='two');
 }
