@@ -419,6 +419,22 @@ header h1{font-size:22px}.question{font-size:28px}.question.sm{font-size:19px}.m
 .howto .lh{color:var(--coral-d)} .howto .rh{color:var(--teal-d)}
 #segPlay{margin-bottom:12px}
 #segPlay button{font-size:12px}
+
+.styles{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px 4px;scrollbar-width:none}
+.styles::-webkit-scrollbar{display:none}
+.sty{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:14px;padding:8px 12px;font:inherit;cursor:pointer;text-align:left;box-shadow:0 2px 0 var(--line)}
+.sty b{display:block;font-size:13.5px;font-weight:800;color:var(--ink)}
+.sty span{font-size:11px;font-weight:800}
+.sty .l1{color:var(--teal-d)} .sty .l2{color:var(--pri)} .sty .l3{color:var(--coral-d)}
+.sty.on{background:var(--pri);border-color:var(--pri-d);box-shadow:0 2px 0 var(--pri-d)}
+.sty.on b,.sty.on span{color:#fff}
+.rgrid{background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px 10px;margin-bottom:12px}
+.rg-row{display:grid;grid-template-columns:34px repeat(var(--n),1fr);gap:3px;align-items:center;margin:2px 0}
+.rg-row .h{font-size:11px;font-weight:800;color:var(--muted)}
+.rg-row .c{height:18px;border-radius:5px;background:#f4eee2;display:grid;place-items:center;font-size:9.5px;font-weight:800;color:#fff}
+.rg-row .c.L{background:var(--coral)} .rg-row .c.R{background:var(--teal)}
+.rg-row .c.now{outline:2.5px solid var(--ink);outline-offset:1px}
+.rg-row.cnt .c{background:none;color:var(--muted);height:12px}
 </style>
 </head>
 <body>
@@ -501,13 +517,15 @@ header h1{font-size:22px}.question{font-size:28px}.question.sm{font-size:19px}.m
       <div class="cn" id="nowName"></div><div class="cnotes" id="nowNotes"></div>
       <div class="beats" id="beats"></div><div class="nx" id="nowNext"></div>
     </div>
-    <div class="seg" id="segPlay"><button data-v="block">Plaqué · débutant</button><button data-v="two">2 mains</button><button data-v="arp">Arpèges · interm.</button></div>
+    <div class="styles" id="segPlay"></div>
+    <div class="rgrid" id="rgrid"></div>
     <div class="kb-wrap"><div class="kb" id="skb"></div></div>
     <div class="legend" id="sLegend"><span style="--c:var(--coral)">main gauche</span><span style="--c:var(--teal)">main droite</span></div>
     <div id="howTo"></div>
     <div class="ctrl"><button class="btn primary" id="sPlay">▶ Jouer la grille</button>
       <label class="tempo">♩ <input type="range" id="sTempo" min="40" max="130" step="2"><span id="sBpm"></span></label></div>
-    <label class="switch" style="padding:4px 2px 12px">Enchaînement facile (doigts qui bougent peu)<input type="checkbox" id="sSmooth"></label>
+    <label class="switch" style="padding:4px 2px 4px">Enchaînement facile (doigts qui bougent peu)<input type="checkbox" id="sSmooth"></label>
+    <label class="switch" style="padding:4px 2px 12px"><span>Accords enrichis : ajouter la 9e (son plus moderne)</span><input type="checkbox" id="sRich"></label>
     <div id="songTip"></div>
     <div id="sections"></div>
   </main>
@@ -1129,7 +1147,7 @@ function drawQuiz(fb=''){
 
 
 /* ---------- Répertoire ---------- */
-DATA.songs=DATA.songs||{}; if(DATA.smooth===undefined)DATA.smooth=true; DATA.songMode=DATA.songMode||'block';
+DATA.songs=DATA.songs||{}; if(DATA.smooth===undefined)DATA.smooth=true; DATA.songMode=['block','two','arp','ballad','alberti','roman'].includes(DATA.songMode)?DATA.songMode:'block';
 const SONGS=[
  {id:'imagine',title:'Imagine',artist:'John Lennon (1971)',cover:'☮️',bg:'#efeaff',key:'Do majeur',bpm:76,lv:'Débutant +',pd:false,
   tip:'Le couplet balance entre Do et Do maj7 : on ajoute simplement Si (la septième majeure) au-dessus de Do – Mi – Sol. Commence par la main droite seule, une main gauche simple (la fondamentale) viendra ensuite.',
@@ -1199,19 +1217,59 @@ function buildSongKb(){
     kb.appendChild(el); skEls[n]=el;
   }
 }
-const lhOf=c=>{const rp=rootPc(c.r);return {root:rp,fifth:rp+7<12?rp+7:rp-5}};
-function stepKeys(st){const rh=st.v.map(x=>x+SG.off);const lh=SG.off?[lhOf(st.c).root]:[];return {rh,lh}}
+const STYLES={
+ block:{name:'Plaqué',lvl:1,lvlT:'Débutant',sub:1,ev:s=>s===0?[['R','all',1,'bar']]:[],
+   how:'La <span class="rh">main droite</span> plaque l’accord une fois et le tient. Doigts 1-3-5.'},
+ two:{name:'2 mains',lvl:1,lvlT:'Débutant +',sub:1,ev:s=>[...(s===0?[['L','r',1,'bar']]:[]),['R','all',s===0?1:.7,.5]],
+   how:'La <span class="lh">main gauche</span> tient la fondamentale (doigt 5), la <span class="rh">main droite</span> plaque l’accord sur chaque temps.'},
+ arp:{name:'Arpège simple',lvl:2,lvlT:'Intermédiaire',sub:2,ev:(s)=>[...(s%8===0?[['L','r',1,'half']]:s%8===4?[['L','f',.85,'half']]:[]),['R','arp',s%2===0?.9:.7,.9]],
+   how:'<span class="lh">MG</span> : fondamentale puis quinte. <span class="rh">MD</span> : bas – milieu – haut – milieu en croches (doigts 1-3-5-3).'},
+ ballad:{name:'Ballade pop',lvl:2,lvlT:'Intermédiaire',sub:2,ev:(s)=>{const e=[],m=s%8;
+     if(m===0)e.push(['L','r',1,'half'],['L','o',.8,'half']); if(m===4)e.push(['L','f',.8,'half']);
+     const acc={0:1,3:.75,4:.85,6:.7}; if(m in acc)e.push(['R','all',acc[m],.55]); return e},
+   how:'Le son « Imagine » : <span class="lh">MG</span> en octave sur le 1, quinte sur le 3. <span class="rh">MD</span> en rythme syncopé : 1 – (2) et – 3 – 4. Compte à voix haute « 1 et 2 et 3 et 4 et ».'},
+ alberti:{name:'Basse d’Alberti',lvl:3,lvlT:'Classique',sub:2,ev:(s)=>{const m=s%8,e=[['L',['r','f','t','f'][m%4],m%4===0?.85:.65,.35]];
+     if(m===0)e.push(['R','all',.75,'half']); if(m===4)e.push(['R','top',.7,'half']); return e},
+   how:'Le style Mozart : la <span class="lh">MG</span> brise l’accord grave – aigu – milieu – aigu (doigts 5-1-3-1), en continu. La <span class="rh">MD</span> pose l’accord, puis rejoue la note du haut au milieu de la mesure.'},
+ roman:{name:'Romantique',lvl:3,lvlT:'Avancé',sub:2,ev:(s)=>{const m=s%8,e=[['L',['r','f','o','T','o','f','o','f'][m],m===0?.95:.6,2.2]];
+     if(m===0)e.push(['R','all',.8,'bar']); if(m===4)e.push(['R','top',.65,'half']); if(m===6)e.push(['R','v1',.5,.8]); return e},
+   how:'Comme une ballade de film : la <span class="lh">MG</span> déroule fondamentale – quinte – octave – dixième en vague (pense pédale !). La <span class="rh">MD</span> tient l’accord et chante la note du haut. Joue lentement, tout en souplesse.'}
+};
+const lhSet=c=>{const r=rootPc(c.r), t3=T[c.type].iv[1]%12===2?4:T[c.type].iv[1]%12;return {r,f:r+7,o:r+12,t:r+t3+12,T:r+12+t3}};
+function richV(st){
+  if(!DATA.songRich||T[st.c.type].iv.length>3)return st.v;
+  const pc=(rootPc(st.c.r)+2)%12; let x=st.v[0]+1; while(x%12!==pc)x++;
+  return [...st.v,x].sort((p,q)=>p-q);
+}
+function resolve(st,hand,sel,i){
+  if(hand==='L'){const L=lhSet(st.c);return [L[sel]]}
+  const v=richV(st).map(x=>x+SG.off);
+  if(sel==='all')return v; if(sel==='top')return [v[v.length-1]];
+  if(sel==='arp'){const p=v.length===3?[v[0],v[1],v[2],v[1]]:v.length===4?[v[0],v[1],v[2],v[3],v[2],v[1]]:[v[0],v[1],v[2],v[3],v[4],v[3],v[2],v[1]];return [p[i%p.length]]}
+  if(sel[0]==='v')return [v[Math.min(+sel.slice(1),v.length-1)]];
+  return [];
+}
+function stepKeys(st){
+  const S=STYLES[DATA.songMode], n=st.c.beats*S.sub, rh=new Set(), lh=new Set();
+  for(let s=0;s<n;s++)S.ev(s).forEach(([h,sel])=>resolve(st,h,sel,s).forEach(k=>(h==='L'?lh:rh).add(k)));
+  if(!rh.size)richV(st).forEach(x=>rh.add(x+SG.off));
+  return {rh:[...rh],lh:SG.off?[...lh]:[]};
+}
 const snd=k=>k-SG.off;
-function arpPattern(v){return v.length===3?[v[0],v[1],v[2],v[1]]:[v[0],v[1],v[2],v[3],v[2],v[1]]}
+function renderGrid(){
+  const S=STYLES[DATA.songMode], n=4*S.sub;
+  const row=h=>`<div class="rg-row" style="--n:${n}"><span class="h">${h==='L'?'MG':'MD'}</span>${Array.from({length:n},(_,s)=>{const on=S.ev(s).some(e=>e[0]===h);return `<span class="c ${on?h:''}" data-s="${s}"></span>`}).join('')}</div>`;
+  const cnt=`<div class="rg-row cnt" style="--n:${n}"><span class="h"></span>${Array.from({length:n},(_,s)=>`<span class="c">${S.sub===2?(s%2?'et':s/2+1):s+1}</span>`).join('')}</div>`;
+  $('#rgrid').innerHTML=cnt+row('R')+(DATA.songMode==='block'?'':row('L'));
+}
+function gridNow(s){const S=STYLES[DATA.songMode],n=4*S.sub;document.querySelectorAll('#rgrid .c[data-s]').forEach(c=>c.classList.toggle('now',s>=0&&+c.dataset.s===s%n))}
 function renderHowTo(){
-  const m=DATA.songMode;
+  const m=DATA.songMode, S=STYLES[m];
   $('#sLegend').hidden=m==='block';
-  document.querySelectorAll('#segPlay button').forEach(b=>b.classList.toggle('on',b.dataset.v===m));
-  $('#howTo').innerHTML=`<div class="howto">${m==='block'
-   ?'<b>Plaqué :</b> joue les 3 notes ensemble avec la <span class="rh">main droite</span>, une fois par accord. Doigts 1-3-5 (pouce, majeur, auriculaire).'
-   :m==='two'
-   ?'<b>2 mains :</b> la <span class="lh">main gauche</span> tient la fondamentale dans le grave (auriculaire, doigt 5). La <span class="rh">main droite</span> plaque l’accord sur chaque temps. Commence lentement, puis accélère.'
-   :'<b>Arpèges :</b> la <span class="lh">main gauche</span> joue la fondamentale sur le 1<sup>er</sup> temps, puis la quinte au milieu de la mesure. La <span class="rh">main droite</span> égrène l’accord en croches : bas – milieu – haut – milieu (doigts 1-3-5-3). Astuce : baisse le tempo à 50-60 au début.'}</div>`;
+  $('#segPlay').innerHTML=Object.entries(STYLES).map(([k,v])=>`<button class="sty${k===m?' on':''}" data-v="${k}"><b>${v.name}</b><span class="l${v.lvl}">${v.lvlT}</span></button>`).join('');
+  document.querySelectorAll('#segPlay .sty').forEach(b=>b.onclick=()=>{DATA.songMode=b.dataset.v;save();stopSong();buildSongKb();renderHowTo();showStep(Math.min(SG.idx,SG.seq.length-1),true)});
+  $('#howTo').innerHTML=`<div class="howto"><b>${S.name} :</b> ${S.how}${S.lvl>=2?' <br><span style="color:var(--muted)">Astuce : commence à 50-60 au tempo, mains séparées, puis ensemble.</span>':''}</div>`;
+  renderGrid();
 }
 function openSongs(){
   stopSong(); showView('songs'); $('#back').hidden=false; $('#title').textContent='Répertoire';
@@ -1229,7 +1287,7 @@ function openSong(id){
   showView('song'); $('#back').hidden=false; $('#title').textContent=s.title;
   $('#songHead').innerHTML=`<div class="meta">${s.artist} · ${s.key} · ${s.lv}</div><div class="note">${s.pd?'Œuvre du domaine public · grille simplifiée':'Grille d’accords simplifiée · paroles et mélodie non incluses'}</div>`;
   $('#songTip').innerHTML=`<div class="song-tip">💡 ${s.tip}</div>`;
-  $('#sTempo').value=SG.bpm; $('#sBpm').textContent=SG.bpm; $('#sSmooth').checked=DATA.smooth;
+  $('#sTempo').value=SG.bpm; $('#sBpm').textContent=SG.bpm; $('#sSmooth').checked=DATA.smooth; $('#sRich').checked=!!DATA.songRich; SG.click=true;
   buildSongKb(); renderHowTo(); buildSeq(); renderSections(); showStep(0,false);
 }
 function buildSeq(){
@@ -1256,43 +1314,40 @@ function showStep(k,sound){
   K.rh.forEach(n=>put(n,'ok')); K.lh.forEach(n=>put(n,'lh'));
   document.querySelectorAll('.cc').forEach(b=>b.classList.toggle('cur',+b.dataset.si===st.si&&+b.dataset.ci===st.ci));
   const cur=document.querySelector('.cc.cur'); if(cur&&SG.playing)cur.scrollIntoView({block:'nearest',behavior:'smooth'});
-  if(sound)playNotes([...K.lh,...K.rh].map(snd),DATA.songMode==='arp');
+  if(DATA.songRich&&T[st.c.type].iv.length===3)$('#nowNotes').textContent+=' + '+spell(st.c.r,2,1)+' (9e)';
+  if(sound)playNotes([...K.lh,...K.rh].map(snd),DATA.songMode!=='block'&&DATA.songMode!=='two');
 }
-function hit(k,ms){const el=skEls[k];if(!el)return;el.classList.add('hit');setTimeout(()=>el.classList.remove('hit'),ms)}
 function tick(){
-  const st=SG.seq[SG.idx], m=DATA.songMode, sub=m==='arp'?2:1, step=60000/SG.bpm/sub, c=ac();
+  const st=SG.seq[SG.idx], m=DATA.songMode, S=STYLES[m], sub=S.sub, step=60000/SG.bpm/sub, c=ac();
   const beat=Math.floor(SG.sub/sub), onBeat=SG.sub%sub===0;
   if(SG.sub===0)showStep(SG.idx,false);
-  const K=stepKeys(st), t0=c?c.currentTime+0.01:0, dur=st.c.beats*60/SG.bpm;
+  const dur=st.c.beats*60/SG.bpm, left=dur-SG.sub*step/1000;
   if(c){
-    if(m==='block'){ if(SG.sub===0)playNotes(st.v,false) }
-    else if(m==='two'){
-      if(SG.sub===0){tone(snd(K.lh[0]),t0,dur+0.3,0.3);hit(K.lh[0],dur*900)}
-      K.rh.forEach(k=>{tone(snd(k),t0,0.9,SG.sub===0?0.17:0.12);hit(k,200)});
-    }else{
-      const lh=lhOf(st.c);
-      if(SG.sub===0){tone(snd(lh.root),t0,dur/2+0.4,0.3);hit(lh.root,250)}
-      if(st.c.beats>=4&&SG.sub===st.c.beats){const f=lh.fifth;tone(snd(f),t0,dur/2+0.3,0.26);hit(f,250)}
-      const pat=arpPattern(K.rh), k=pat[SG.sub%pat.length];
-      tone(snd(k),t0,0.9,0.2); hit(k,step*0.9);
-    }
-    if(onBeat)blip(beat===0?1568:1175,t0,0.04,'sine',0.04);
+    const t0=c.currentTime+0.01;
+    S.ev(SG.sub).forEach(([h,sel,vel,d])=>{
+      const dd=d==='bar'?left+0.25:d==='half'?Math.min(left,dur/2)+0.2:d;
+      const ks=resolve(st,h,sel,SG.sub), v=(h==='L'?0.3:0.22)*vel/Math.sqrt(Math.max(1,ks.length*0.6));
+      ks.forEach(k=>{tone(snd(k),t0,Math.max(0.3,dd),v);hit(k,Math.min(400,step*0.9))});
+    });
+    if(onBeat&&SG.click)blip(beat===0?1568:1175,t0,0.04,'sine',0.035);
   }
   if(onBeat)document.querySelectorAll('#beats i').forEach((d,i)=>d.classList.toggle('on',i===beat));
+  gridNow(SG.sub);
   SG.sub++;
   if(SG.sub>=st.c.beats*sub){SG.sub=0;SG.idx++;
-    if(SG.idx>=SG.seq.length){DATA.songs[SG.song.id]=(DATA.songs[SG.song.id]||0)+1;addXP(m==='block'?20:30);stopSong();showStep(0,false);
-      fx('win');$('#nowNext').textContent=`Bravo, morceau terminé ! +${m==='block'?20:30} ♪`;return}}
+    if(SG.idx>=SG.seq.length){const g=10+S.lvl*10;DATA.songs[SG.song.id]=(DATA.songs[SG.song.id]||0)+1;addXP(g);stopSong();showStep(0,false);
+      fx('win');$('#nowNext').textContent=`Bravo, morceau terminé ! +${g} ♪`;return}}
   SG.timer=setTimeout(tick,step);
 }
+function hit(k,ms){const el=skEls[k];if(!el)return;el.classList.add('hit');setTimeout(()=>el.classList.remove('hit'),ms)}
 function playSong(){
   if(SG.playing){stopSong();return}
   SG.playing=true; SG.sub=0; if(SG.idx>=SG.seq.length-1)SG.idx=0;
   $('#sPlay').textContent='⏸ Pause'; tick();
 }
-function stopSong(){clearTimeout(SG.timer);SG.timer=null;SG.playing=false;SG.sub=0;const b=$('#sPlay');if(b)b.textContent='▶ Jouer la grille';document.querySelectorAll('#beats i').forEach(d=>d.classList.remove('on'))}
+function stopSong(){clearTimeout(SG.timer);SG.timer=null;SG.playing=false;SG.sub=0;if($('#rgrid'))gridNow(-1);const b=$('#sPlay');if(b)b.textContent='▶ Jouer la grille';document.querySelectorAll('#beats i').forEach(d=>d.classList.remove('on'))}
 $('#sPlay').onclick=()=>{ac();playSong()};
-document.querySelectorAll('#segPlay button').forEach(b=>b.onclick=()=>{DATA.songMode=b.dataset.v;save();stopSong();buildSongKb();renderHowTo();showStep(Math.min(SG.idx,SG.seq.length-1),true)});
+$('#sRich').onchange=e=>{DATA.songRich=e.target.checked;save();stopSong();buildSongKb();renderHowTo();showStep(Math.min(SG.idx,SG.seq.length-1),true)};
 $('#sTempo').oninput=e=>{SG.bpm=+e.target.value;$('#sBpm').textContent=SG.bpm};
 $('#sSmooth').onchange=e=>{DATA.smooth=e.target.checked;save();stopSong();buildSeq();showStep(Math.min(SG.idx,SG.seq.length-1),true)};
 
